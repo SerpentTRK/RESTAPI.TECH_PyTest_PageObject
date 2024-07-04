@@ -37,6 +37,23 @@ class CompaniesMethods:
             f"Ошибка! В JSON-DATA ожидали {company_quantity} компании, а фактическое значение = {count_company_id}"
         return self
 
+    def validate_offset(self, offset_value):
+        """
+        Валидация работы offset
+        Проверить работу offset мы можем, выбрав значения company_id. Зная, что первый company_id == 1, offset даст
+        сдвиг первого сохраненного значения в company_id.
+        Если offset == 2, то первое company_id == 3 (1 и 2 отбрасывает offset)
+        """
+        data_object = self.response.json().get("data")
+        first_company_id = 1
+
+        list_company_id_values = [value for item in data_object for key, value in item.items() if key == "company_id"]
+        assert first_company_id + offset_value == list_company_id_values[0], \
+            f"Ошибка! offset: {offset_value}. Ожидаемое значение 'company_id': {first_company_id + offset_value}, " \
+            f"фактически значение 'company_id': {list_company_id_values[0]}"
+
+
+
 
 
 ### Старые методы

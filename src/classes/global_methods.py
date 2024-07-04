@@ -4,7 +4,7 @@ class GlobalMethods:
     def __init__(self, response):
         self.response = response
 
-    def basic_checks(self):
+    def basic_checks_collection(self):
         """
         Коллекция базовых проверок под стандартные данные:
             Status code == 200
