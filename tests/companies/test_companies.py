@@ -9,7 +9,7 @@ from src.pydantic_shemas.model_companies_200 import ModelCompanies200
 
 def test_001_get_companies_list():
     """
-    Получение списка компаний.
+    Получить список компаний.
 
     Ожидаемый результат:
         Статус-код 200;
@@ -29,6 +29,23 @@ def test_001_get_companies_list():
     test_object_companies.validate_companies_quantity(3)
     test_object_companies.validate_companies_statuses("ACTIVE")
 
+def test_002_get_companies_list_by_http():
+    """
+    Получить список компаний HTTP-запросом (не HTTPS)
+
+    Ожидаемый результат:
+        Статус-код 301;
+        Время ответа сервера - не превышает 1000ms;
+        Response url: "http://restapi.tech/api/companies"
+        Response header "Connection": "keep-alive"
+    """
+    response_object = requests.get("http://restapi.tech/api/companies", allow_redirects=False)
+
+    test_object = GlobalMethods(response_object)
+    test_object.validate_status_code(301)
+    test_object.validate_response_header("Connection", "keep-alive")
+    test_object.validate_time_from_request_to_response(1000)
+    assert response_object.url == "http://restapi.tech/api/companies"
 
 
 
