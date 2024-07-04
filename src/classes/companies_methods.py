@@ -1,5 +1,8 @@
 import re
 
+"""
+Во всех методах в конце поудалял "return self". В том году без этого не работало, а сейчас работает
+"""
 
 class CompaniesMethods:
     def __init__(self, response):
@@ -14,7 +17,6 @@ class CompaniesMethods:
                 schema.model_validate(item)
         else:
             schema.model_validate(self.response.json())
-        return self
 
     def validate_companies_statuses(self, company_status):
         """
@@ -35,7 +37,6 @@ class CompaniesMethods:
 
         assert count_company_id == company_quantity, \
             f"Ошибка! В JSON-DATA ожидали {company_quantity} компании, а фактическое значение = {count_company_id}"
-        return self
 
     def validate_offset(self, offset_value):
         """
@@ -56,78 +57,41 @@ class CompaniesMethods:
         """
         Валидация сообщений об ошибках для разных query-параметров
         """
-        if query_parameter == "company_status":
-            for elem in self.response.json().get("detail"):
-                assert elem["msg"] == "Input should be 'ACTIVE', 'CLOSED' or 'BANKRUPT'"
-                assert elem["input"] == value
-        if query_parameter == "limit":
-            for elem in self.response.json().get("detail"):
-                assert elem["msg"] == "Input should be a valid integer, unable to parse string as an integer"
-                assert elem["input"] == value
+        if query_parameter == "status":
+            error_message = "Input should be 'ACTIVE', 'CLOSED' or 'BANKRUPT'"
+        if query_parameter in ["limit", "offset"]:
+            error_message = "Input should be a valid integer, unable to parse string as an integer"
 
+        for elem in self.response.json().get("detail"):
+            assert elem["msg"] == error_message, \
+                f"Ошибка! Ожидаемый текст ошибки: '{error_message}' не совпадает с полученным: '{elem['msg']}'"
+            assert elem["input"] == value, \
+                f"Ошибка! Отправленное значение: {value} не совпадает с полученным: {elem['input']}"
 
-    def __str__(self):
-        return \
-            f"\nRequested Url: {self.response.url} \n" \
-            f"Status code: {self.response.status_code} \n" \
-            f"Response body: {self.response.json().get('data')} \n" \
-            f"Response headers: {self.response.headers}"
+    def validate_uri_in_request_and_response(self, request_uri):
+        """
+        Сравниваем URI из запроса и ответа
+        """
+        assert self.response.url == request_uri, \
+            f"Ошибка! URI запроса: {request_uri} не совпадает с URI ответа: {self.response.url}"
+
+    def validate_first_language(self):
+        """
+        Проверка того, что первый язык в "description_lang" == EN
+        """
+        first_language_by_default = "EN"
+        data_object = self.response.json().get("description_lang")[0]
+        first_language = [value for key, value in data_object.items() if key == "translation_lang"]
+
+        assert "".join(first_language) == first_language_by_default, \
+            f"Ошибка! Первым языком в 'description_lang' должен стоять '{first_language_by_default}', " \
+            f"а мы получаем '{''.join(first_language)}'"
+
 
 ### Старые методы
 
 
 
-    def validate_status_company(self, body_key, body_value):
-        """
-        Валидация нужных элементов json("body")
-        """
-        for dicts in self.response.json().get("data"):
-            for key, value in dicts.items():
-                if key == body_key:
-                    assert value == body_value, "Не верный company_status"
-                    return self
-
-    def assert_limit_json_body_data(self, num):
-        """
-        Валидация json("body") c query-параметром limit
-        """
-        for key, value in self.response.json().get("meta").items():
-            if key == "limit":
-                len_data = value
-        assert len(self.response.json().get("data")) == len_data == num, "Ошибка в работе limit"
-        return self
-
-    def assert_offset_json_body_data(self, offset_num, company_id):
-        """
-        Валидация json("body") c query-параметром offset
-        """
-        for key, value in self.response.json().get("meta").items():
-            if key == "offset":
-                offset_meta_data = value
-        for dicts in self.response.json().get("data"):
-            for key, value in dicts.items():
-                if key == "company_id":
-                    first_id = value
-
-        assert offset_meta_data == offset_num and company_id == first_id, "Ошибка в работе offset"
-        return self
-
-    def assert_first_language_in_response(self, lang):
-        """
-        Если в JSON есть translation_lang, то первый язык должен быть EN
-        """
-        for dict in self.response.json().get("description_lang")[:1]:
-            for key, value in dict.items():
-                if key == "translation_lang":
-                    assert value == lang, "Первый язык должен быть EN"
-                    return self
-
-    def assert_comparison_uri_in_request_and_response(self, url):
-        """
-        Проверка на совпадение URI из запроса и URI из ответа
-        """
-        assert self.response.url == url, "Адреса не совпадают"
-        return self
 
     def assert_response_message_about_error_404(self, company_id):
         """
@@ -137,15 +101,7 @@ class CompaniesMethods:
             assert value == f"Company with requested id: {company_id} is absent", self
             return self
 
-    def assert_response_message_about_error_422(self, resp_key, resp_value):
-        """
-        Валидация сообщения об 404 ошибке.
-        """
-        for dicts in self.response.json().get("detail"):
-            for key, value in dicts.items():
-                if key == resp_key:
-                    assert value == resp_value
-                    return self
+
 
     def assert_language(self, lang):
         """

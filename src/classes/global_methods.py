@@ -1,4 +1,8 @@
-import datetime
+
+
+"""
+Во всех методах в конце поудалял "return self". В том году без этого не работало, а сейчас работает
+"""
 
 class GlobalMethods:
     def __init__(self, response):
@@ -25,7 +29,7 @@ class GlobalMethods:
             assert self.response.status_code in status_code, self
         else:
             assert self.response.status_code == status_code, self
-        return self
+        # return self
 
     def validate_time_from_request_to_response(self, max_time_to_response):
         """
@@ -34,7 +38,7 @@ class GlobalMethods:
         response_time = int(self.response.elapsed.microseconds) / 100  # 50333 => 503.33
 
         assert max_time_to_response > response_time, self
-        return self
+        # return self
 
     def validate_response_header(self, header, value):
         """
@@ -42,7 +46,7 @@ class GlobalMethods:
         """
         if header in self.response.headers:
             assert value == self.response.headers.get(header), self
-            return self
+        # return self
 
 
     def __str__(self):

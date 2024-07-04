@@ -6,6 +6,7 @@ from src.classes.global_methods import GlobalMethods
 from src.classes.companies_methods import CompaniesMethods
 
 from src.pydantic_shemas.model_companies_200 import ModelCompanies200
+from src.pydantic_shemas.model_company_200 import ModelCompany200
 from src.pydantic_shemas.model_https_422 import ModelHttps422
 
 
@@ -91,7 +92,8 @@ def test_004_get_companies_with_different_query_statuses(company_status):
         Response header "Connection": "keep-alive"
         В JSON компании только с указанным статусом
     """
-    parameters = {"status": company_status}
+    query_parameter = "status"
+    parameters = {query_parameter: company_status}
     response_object = requests.get(url=baseUrl_companies, params=parameters)
 
     test_object = GlobalMethods(response_object)
@@ -113,8 +115,8 @@ def test_005_get_compani_with_incorrect_status_ABCDE():
         Response header "Connection": "keep-alive"
         В JSON присутствует описание ошибки
     """
-    company_status = "ABCDE"
-    parameters = {"status": company_status}
+    query_parameter, value = "status", "ABCDE"
+    parameters = {query_parameter: value}
     response_object = requests.get(url=baseUrl_companies, params=parameters)
 
     test_object = GlobalMethods(response_object)
@@ -125,11 +127,11 @@ def test_005_get_compani_with_incorrect_status_ABCDE():
 
     test_object_companies = CompaniesMethods(response_object)
     test_object_companies.validate_json_schema(ModelHttps422)
-    test_object_companies.validate_error_message_with_status_code_422("company_status", company_status)
+    test_object_companies.validate_error_message_with_status_code_422(query_parameter, value)
 
 @pytest.mark.skip("{id записи об ошибке} Вместо 422 получаем статус-код 200. Skip-аем пока не починят")
 @pytest.mark.companies
-def test_006_get_companies_with_incorrect_query_limit():
+def test_006_get_companies_with_incorrect_int_query_limit():
     """
     Получить список компаний с указанием отрицательного лимита limit = -1
 
@@ -143,8 +145,8 @@ def test_006_get_companies_with_incorrect_query_limit():
 
     Полученный результат: Выгружены все компании из БД, статус-код 200
     """
-    limit_value = -1
-    parameters = {"limit": limit_value}
+    query_parameter, value = "limit", -1
+    parameters = {query_parameter: value}
     response_object = requests.get(url=baseUrl_companies, params=parameters)
 
     test_object = GlobalMethods(response_object)
@@ -159,7 +161,7 @@ def test_006_get_companies_with_incorrect_query_limit():
     # сообщения, потому и метод создать для этого случая не можем
 
 @pytest.mark.companies
-def test_007_get_companies_with_incorrect_query_limit():
+def test_007_get_companies_with_incorrect_str_query_limit():
     """
     Получить список компаний с указанием строчного значения limit = "abc"
 
@@ -171,8 +173,8 @@ def test_007_get_companies_with_incorrect_query_limit():
         Response header "Connection": "keep-alive"
         В JSON присутствует описание ошибки
     """
-    limit_value = "abc"
-    parameters = {"limit": limit_value}
+    query_parameter, value = "limit", "abc"
+    parameters = {query_parameter: value}
     response_object = requests.get(url=baseUrl_companies, params=parameters)
 
     test_object = GlobalMethods(response_object)
@@ -183,9 +185,89 @@ def test_007_get_companies_with_incorrect_query_limit():
 
     test_object_companies = CompaniesMethods(response_object)
     test_object_companies.validate_json_schema(ModelHttps422)
-    test_object_companies.validate_error_message_with_status_code_422("limit", limit_value)
+    test_object_companies.validate_error_message_with_status_code_422(query_parameter, value)
+
+@pytest.mark.companies
+def test_008_companies_with_incorrect_int_query_offset():
+    """
+    Получить список компаний с указанием отрицательного значения offset = -1
+
+    Ожидаемый результат:
+        Статус-код 200;
+        Время ответа сервера - не превышает 1000ms; (на боевых не должно быть больше 500)
+        Схема JSON-ответа соответствует Требованиям;
+        Response header "Content-Type": "application/json"
+        Response header "Connection": "keep-alive"
+        В JSON id первой в списке компании начинается = 1, и количество компаний = 3
+        (выводятся значения по-умолчанию, как в test_001_get_companies_default_request)
+    """
+    query_parameter, value = "offset", -1
+    parameters = {query_parameter: value}
+    response_object = requests.get(url=baseUrl_companies, params=parameters)
+
+    test_object = GlobalMethods(response_object)
+    test_object.basic_checks_collection()
+
+    test_object_companies = CompaniesMethods(response_object)
+    test_object_companies.validate_json_schema(ModelCompanies200)
+    test_object_companies.validate_companies_quantity(3)
+    test_object_companies.validate_companies_statuses("ACTIVE")
+
+@pytest.mark.companies
+def test_009_companies_with_incorrect_str_query_offset():
+    """
+    Получить список компаний с указанием строчного значения offset = "abc"
+
+    Ожидаемый результат:
+        Статус-код 422;
+        Время ответа сервера - не превышает 1000ms; (на боевых не должно быть больше 500)
+        Схема JSON-ответа соответствует требованиям;
+        Response header "Content-Type": "application/json"
+        Response header "Connection": "keep-alive"
+        В JSON присутствует описание ошибки
+    """
+    query_parameter, value = "offset", "abc"
+    parameters = {query_parameter: value}
+    response_object = requests.get(url=baseUrl_companies, params=parameters)
+
+    test_object = GlobalMethods(response_object)
+    test_object.validate_status_code(422)
+    test_object.validate_response_header("Content-Type", "application/json")
+    test_object.validate_response_header("Connection", "keep-alive")
+    test_object.validate_time_from_request_to_response(1000)
+
+    test_object_companies = CompaniesMethods(response_object)
+    test_object_companies.validate_json_schema(ModelHttps422)
+    test_object_companies.validate_error_message_with_status_code_422(query_parameter, value)
+
+@pytest.mark.companies
+def test_010_get_company_by_id():
+    """
+    Получить информацию о компании по существующему Id=1 в эндпоинте URI
+
+    Ожидаемый результат:
+        Статус-код 200;
+        Время ответа сервера - не превышает 1000ms; (на боевых не должно быть больше 500)
+        Схема JSON-ответа соответствует Требованиям;
+        Response header "Content-Type": "application/json"
+        Response header "Connection": "keep-alive"
+        В JSON - company_id совпадает с id URI и первый в списке поддерживаемых языков EN;
+    """
+    company_id = "/1"
+    response_object = requests.get(url=baseUrl_companies + company_id)
+
+    test_object = GlobalMethods(response_object)
+    test_object.basic_checks_collection()
+
+    test_object_companies = CompaniesMethods(response_object)
+    test_object_companies.validate_json_schema(ModelCompany200)
+    test_object_companies.validate_uri_in_request_and_response(baseUrl_companies + company_id)
+    test_object_companies.validate_first_language()
 
 
+
+
+@pytest.mark.skip("Это черновик")
 def test_test():
     """
     черновик
