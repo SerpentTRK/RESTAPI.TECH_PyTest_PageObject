@@ -1,8 +1,9 @@
 from typing import List
-from enum import Enum
 
 from pydantic import BaseModel, field_validator, Field
-# from src.enums.schema_enums import Company_stats
+
+from src.enums.schema_enums import Company_stats
+
 
 """
 id: int   int = None или int = "" или int = 0 - если это не обязательный параметр
@@ -11,12 +12,6 @@ company_id: int = Field(gt=0) - Это вариант валидации инс�
 Для ключей с нижним подчеркиванием:
 name: str Field(alias="_name")
 """
-
-class Company_stats(Enum):
-    ACTIVE = "ACTIVE"
-    CLOSED = "CLOSED"
-    BANKRUPT = "BANKRUPT"
-
 class Datum(BaseModel):
     company_id: int
     company_name: str

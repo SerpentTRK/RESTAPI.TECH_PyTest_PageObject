@@ -52,9 +52,26 @@ class CompaniesMethods:
             f"Ошибка! offset: {offset_value}. Ожидаемое значение 'company_id': {first_company_id + offset_value}, " \
             f"фактически значение 'company_id': {list_company_id_values[0]}"
 
+    def validate_error_message_with_status_code_422(self, query_parameter, value):
+        """
+        Валидация сообщений об ошибках для разных query-параметров
+        """
+        if query_parameter == "company_status":
+            for elem in self.response.json().get("detail"):
+                assert elem["msg"] == "Input should be 'ACTIVE', 'CLOSED' or 'BANKRUPT'"
+                assert elem["input"] == value
+        if query_parameter == "limit":
+            for elem in self.response.json().get("detail"):
+                assert elem["msg"] == "Input should be a valid integer, unable to parse string as an integer"
+                assert elem["input"] == value
 
 
-
+    def __str__(self):
+        return \
+            f"\nRequested Url: {self.response.url} \n" \
+            f"Status code: {self.response.status_code} \n" \
+            f"Response body: {self.response.json().get('data')} \n" \
+            f"Response headers: {self.response.headers}"
 
 ### Старые методы
 
@@ -141,12 +158,3 @@ class CompaniesMethods:
         for words in only_text:
             assert words.lower() in lang
             return self
-
-
-
-    def __str__(self):
-        return \
-            f"\nRequested Url: {self.response.url} \n" \
-            f"Status code: {self.response.status_code} \n" \
-            f"Response body: {self.response.json().get('data')} \n" \
-            f"Response headers: {self.response.headers}"
