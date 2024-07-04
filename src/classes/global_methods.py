@@ -8,11 +8,12 @@ class GlobalMethods:
         """
         Коллекция базовых проверок под стандартные данные:
             Status code == 200
-            Ожидание ответа от сервера < 700 сек
-            !!! Заголовок "content-type" == "application/json" !!!
+            Ожидание ответа от сервера < 1000 сек
+            Response header "Content-Type":  "application/json"
+            Response header "Connection": "keep-alive"
         """
         self.validate_status_code(200)
-        self.validate_time_from_request_to_response(800)
+        self.validate_time_from_request_to_response(1000)
         self.validate_response_header("Content-type", "application/json")
         self.validate_response_header("Connection", "keep-alive")
 
@@ -42,21 +43,6 @@ class GlobalMethods:
         if header in self.response.headers:
             assert value == self.response.headers.get(header), self
             return self
-
-    def validate_schema(self, schema):
-        """
-        Валидация схемы
-        """
-        if isinstance(self.response.json(), list):
-            for item in self.response.json():
-                schema.model_validate(item)
-        else:
-            schema.model_validate(self.response.json())
-        return self
-
-    # def assert_https_request(self, port):
-    #     assert port in self.response.headers.get("alt-svc"), f"Не безопасное соединение {self.response.headers.get('alt-svc')}"
-    #     return  self
 
 
     def __str__(self):

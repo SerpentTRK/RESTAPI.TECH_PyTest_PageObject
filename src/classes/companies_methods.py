@@ -5,12 +5,47 @@ class CompaniesMethods:
     def __init__(self, response):
         self.response = response
 
+    def validate_json_schema(self, schema):
+        """
+        Валидация JSON-схемы
+        """
+        if isinstance(self.response.json(), list):
+            for item in self.response.json():
+                schema.model_validate(item)
+        else:
+            schema.model_validate(self.response.json())
+        return self
+
+    def validate_companies_statuses(self, company_status):
+        """
+        Валидация статуса компаний
+        """
+        data_object = self.response.json().get("data")
+
+        for item in data_object:
+            assert item["company_status"] == company_status, \
+                f"Ошибка! Ожидали 'company_status': {company_status}, а получили {item['company_status']}"
+
+    def validate_companies_quantity(self, company_quantity):
+        """
+        Валидация количества компаний
+        """
+        data_object = self.response.json().get("data")
+        count_company_id = sum(1 for item in data_object if 'company_id' in item)
+
+        assert count_company_id == company_quantity, \
+            f"Ошибка! В JSON-DATA ожидали {company_quantity} компании, а фактическое значение = {count_company_id}"
+        return self
+
+
+
+### Старые методы
+
+
+
     def validate_status_company(self, body_key, body_value):
         """
         Валидация нужных элементов json("body")
-
-        Надо переписать, сделать универсальный метод... мы омжем что угодно искать, и сколько угодно
-        параметров передавать
         """
         for dicts in self.response.json().get("data"):
             for key, value in dicts.items():
