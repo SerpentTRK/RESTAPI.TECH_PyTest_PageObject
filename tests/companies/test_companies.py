@@ -1,3 +1,4 @@
+
 import pytest
 import requests
 
@@ -5,9 +6,11 @@ from src.configuration import baseUrl_companies
 from src.classes.global_methods import GlobalMethods
 from src.classes.companies_methods import CompaniesMethods
 
+
 from src.pydantic_shemas.model_companies_200 import ModelCompanies200
 from src.pydantic_shemas.model_company_200 import ModelCompany200
-from src.pydantic_shemas.model_https_422 import ModelHttps422
+from src.pydantic_shemas.model_422 import Model422
+from src.pydantic_shemas.model_404 import Model404
 
 
 @pytest.mark.companies
@@ -27,9 +30,9 @@ def test_001_get_companies_default_request():
 
     test_object = GlobalMethods(response_object)
     test_object.basic_checks_collection()
+    test_object.validate_json_schema(ModelCompanies200)
 
     test_object_companies = CompaniesMethods(response_object)
-    test_object_companies.validate_json_schema(ModelCompanies200)
     test_object_companies.validate_companies_quantity(3)
     test_object_companies.validate_companies_statuses("ACTIVE")
 
@@ -73,6 +76,7 @@ def test_003_get_companies_with_limit_and_offset():
 
     test_object = GlobalMethods(response_object)
     test_object.basic_checks_collection()
+    test_object.validate_json_schema(ModelCompanies200)
 
     test_object_companies = CompaniesMethods(response_object)
     test_object_companies.validate_companies_quantity(5)
@@ -98,6 +102,7 @@ def test_004_get_companies_with_different_query_statuses(company_status):
 
     test_object = GlobalMethods(response_object)
     test_object.basic_checks_collection()
+    test_object.validate_json_schema(ModelCompanies200)
 
     test_object_companies = CompaniesMethods(response_object)
     test_object_companies.validate_companies_statuses(company_status)
@@ -121,12 +126,12 @@ def test_005_get_compani_with_incorrect_status_ABCDE():
 
     test_object = GlobalMethods(response_object)
     test_object.validate_status_code(422)
+    test_object.validate_json_schema(Model422)
     test_object.validate_response_header("Content-Type", "application/json")
     test_object.validate_response_header("Connection", "keep-alive")
     test_object.validate_time_from_request_to_response(1000)
 
     test_object_companies = CompaniesMethods(response_object)
-    test_object_companies.validate_json_schema(ModelHttps422)
     test_object_companies.validate_error_message_with_status_code_422(query_parameter, value)
 
 @pytest.mark.skip("{id записи об ошибке} Вместо 422 получаем статус-код 200. Skip-аем пока не починят")
@@ -151,12 +156,11 @@ def test_006_get_companies_with_incorrect_int_query_limit():
 
     test_object = GlobalMethods(response_object)
     test_object.validate_status_code(422)
+    test_object.validate_json_schema(Model422)
     test_object.validate_response_header("Content-Type", "application/json")
     test_object.validate_response_header("Connection", "keep-alive")
     test_object.validate_time_from_request_to_response(1000)
 
-    test_object_companies = CompaniesMethods(response_object)
-    test_object_companies.validate_json_schema(ModelHttps422)
     # если бы это была не учебная база, то можно было бы провалидировать и сообщение об ошибке, но мы не знаем этого
     # сообщения, потому и метод создать для этого случая не можем
 
@@ -179,12 +183,12 @@ def test_007_get_companies_with_incorrect_str_query_limit():
 
     test_object = GlobalMethods(response_object)
     test_object.validate_status_code(422)
+    test_object.validate_json_schema(Model422)
     test_object.validate_response_header("Content-Type", "application/json")
     test_object.validate_response_header("Connection", "keep-alive")
     test_object.validate_time_from_request_to_response(1000)
 
     test_object_companies = CompaniesMethods(response_object)
-    test_object_companies.validate_json_schema(ModelHttps422)
     test_object_companies.validate_error_message_with_status_code_422(query_parameter, value)
 
 @pytest.mark.companies
@@ -207,9 +211,9 @@ def test_008_companies_with_incorrect_int_query_offset():
 
     test_object = GlobalMethods(response_object)
     test_object.basic_checks_collection()
+    test_object.validate_json_schema(ModelCompanies200)
 
     test_object_companies = CompaniesMethods(response_object)
-    test_object_companies.validate_json_schema(ModelCompanies200)
     test_object_companies.validate_companies_quantity(3)
     test_object_companies.validate_companies_statuses("ACTIVE")
 
@@ -232,12 +236,12 @@ def test_009_companies_with_incorrect_str_query_offset():
 
     test_object = GlobalMethods(response_object)
     test_object.validate_status_code(422)
+    test_object.validate_json_schema(Model422)
     test_object.validate_response_header("Content-Type", "application/json")
     test_object.validate_response_header("Connection", "keep-alive")
     test_object.validate_time_from_request_to_response(1000)
 
     test_object_companies = CompaniesMethods(response_object)
-    test_object_companies.validate_json_schema(ModelHttps422)
     test_object_companies.validate_error_message_with_status_code_422(query_parameter, value)
 
 @pytest.mark.companies
@@ -258,13 +262,91 @@ def test_010_get_company_by_id():
 
     test_object = GlobalMethods(response_object)
     test_object.basic_checks_collection()
+    test_object.validate_json_schema(ModelCompany200)
 
     test_object_companies = CompaniesMethods(response_object)
-    test_object_companies.validate_json_schema(ModelCompany200)
     test_object_companies.validate_uri_in_request_and_response(baseUrl_companies + company_id)
     test_object_companies.validate_first_language()
 
+@pytest.mark.companies
+def test_011_get_company_by_incorrect_id():
+    """
+    Получить информацию о компании по не существующему Id=8 в эндпоинте URI
 
+    Ожидаемый результат:
+        Статус-код 404;
+        Время ответа сервера - не превышает 1000ms; (на боевых не должно быть больше 500)
+        Схема JSON-ответа соответствует Требованиям;
+        Response header "Content-Type": "application/json"
+        Response header "Connection": "keep-alive"
+        В JSON - присутствует ключ detail, значением является описание ошибки, company_id в
+        сообщении совпадает с company_id из реквеста
+    """
+    company_id = "/8"
+    response_object = requests.get(url=baseUrl_companies + company_id)
+
+    test_object = GlobalMethods(response_object)
+    test_object.validate_json_schema(Model404)
+    test_object.validate_status_code(404)
+    test_object.validate_response_header("Content-Type", "application/json")
+    test_object.validate_response_header("Connection", "keep-alive")
+    test_object.validate_time_from_request_to_response(1000)
+
+    test_object_companies = CompaniesMethods(response_object)
+    test_object_companies.validate_response_message_about_error_404(company_id)
+
+def test_012_get_company_by_id_and_supported_language():
+    """
+    Получить информацию о компании по существующему id=1 в эндпоинте URI, с выбором поддерживаемого языка RU
+
+    Ожидаемый результат:
+        Статус-код 200;
+        Время ответа сервера - не превышает 1000ms; (на боевых не должно быть больше 500)
+        Схема JSON-ответа соответствует Требованиям;
+        Response header "Content-Type": "application/json"
+        Response header "Connection": "keep-alive"
+        company_id в JSON совпадает с id URI;
+        Текст в description на Русском языке
+    """
+    company_id = "/1"
+    query_parameter, value = "Accept-Language", "RU"
+    headers = {query_parameter: value}
+    response_object = requests.get(url=baseUrl_companies + company_id, headers=headers)
+
+    test_object = GlobalMethods(response_object)
+    test_object.basic_checks_collection()
+    test_object.validate_json_schema(ModelCompany200)
+
+    test_object_companies = CompaniesMethods(response_object)
+    test_object_companies.validate_uri_in_request_and_response(baseUrl_companies + company_id)
+    test_object_companies.validate_language(value)
+
+def test_013_get_company_by_id_and_unsupported_language():
+    """
+    Получить информацию о компании по существующему id=1 в эндпоинте URI, с выбором не поддерживаемого языка KZ
+
+    Ожидаемый результат:
+        Статус-код 200;
+        Время ответа сервера - не превышает 1000ms; (на боевых не должно быть больше 500)
+        Схема JSON-ответа соответствует Требованиям;
+        Response header "Content-Type": "application/json"
+        Response header "Connection": "keep-alive"
+        Company_id в JSON совпадает с id URI;
+        Выгружены все поддерживаемы языки (как в тесте test_010_get_company_by_id),
+        первый в списке поддерживаемых языков EN;
+    """
+    company_id = "/1"
+    query_parameter, value = "Accept-Language", "KZ"
+    headers = {query_parameter: value}
+    response_object = requests.get(url=baseUrl_companies + company_id, headers=headers)
+
+    test_object = GlobalMethods(response_object)
+    test_object.basic_checks_collection()
+    test_object.validate_json_schema(ModelCompany200)
+
+    test_object_companies = CompaniesMethods(response_object)
+    test_object_companies.validate_uri_in_request_and_response(baseUrl_companies + company_id)
+    test_object_companies.validate_first_language()
 
 
 @pytest.mark.skip("Это черновик")
@@ -272,19 +354,32 @@ def test_test():
     """
     черновик
     """
-    company_status = "ABCDE"
-    parameters = {"status": company_status}
-    response_object = requests.get(url=baseUrl_companies, params=parameters)
+    import re
+
+    company_id = "/1"
+    query_parameter, value = "Accept-Language", "RU"
+    headers = {query_parameter: value}
+    response_object = requests.get(url=baseUrl_companies + company_id, headers=headers)
 
     # # вообще все выгружается, что есть
     # print(response_object.__getstate__())
 
-    print(response_object.json())
+    ru_alphabet = "абвгдеёжзийклмнопрстуфхцчшщъыьэюя"
+    en_alphabet = "abcdefghijklmnopqrstuvwxyz"
+    pl_alphabet = "aąbcćdeęfghijklłmnńoóprsśtuwyzźż"
+    ua_alphabet = "абвгґдеєжзиіїйклмнопрстуфхцчшщьюя"
 
-    error_message = ""
+    alphabets = {"RU": ru_alphabet, "EN": en_alphabet, "PL": pl_alphabet, "UA": ua_alphabet}
+    symbols = alphabets["RU"]
+    print(symbols)
 
-    for elem in response_object.json().get("detail"):
-        assert elem["msg"] == "Input should be 'ACTIVE', 'CLOSED' or 'BANKRUPT'"
+    text = response_object.json().get("description")
+    text = re.sub(r'[^\w\s]', '', text).lower()
+    text = set(text.replace(" ", ""))
+
+
+    assert all(word in symbols for word in text)
+
 
 
 

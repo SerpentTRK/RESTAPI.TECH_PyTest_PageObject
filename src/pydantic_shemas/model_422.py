@@ -13,6 +13,6 @@ class DataFromDetail(BaseModel):
     msg: str
     ctx: Ctx = None  # не обязательное поле
 
-class ModelHttps422(BaseModel):
+class Model422(BaseModel):
     detail: List[DataFromDetail]
 

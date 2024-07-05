@@ -8,16 +8,6 @@ class CompaniesMethods:
     def __init__(self, response):
         self.response = response
 
-    def validate_json_schema(self, schema):
-        """
-        Валидация JSON-схемы
-        """
-        if isinstance(self.response.json(), list):
-            for item in self.response.json():
-                schema.model_validate(item)
-        else:
-            schema.model_validate(self.response.json())
-
     def validate_companies_statuses(self, company_status):
         """
         Валидация статуса компаний
@@ -68,6 +58,16 @@ class CompaniesMethods:
             assert elem["input"] == value, \
                 f"Ошибка! Отправленное значение: {value} не совпадает с полученным: {elem['input']}"
 
+    def validate_response_message_about_error_404(self, company_id):
+        """
+        Валидация 404 ошибки. В нем должен быть указан тот company_id, что и в URI
+        """
+        company_id = company_id.replace("/", "")
+        for key, value in self.response.json().get("detail").items():
+            assert value == f"Company with requested id: {company_id} is absent", \
+                f"Ошибка! В запросе был company_id: '{company_id}', " \
+                f"а по факту получили {''.join(c for c in value if c.isdigit())}"
+
     def validate_uri_in_request_and_response(self, request_uri):
         """
         Сравниваем URI из запроса и ответа
@@ -87,30 +87,18 @@ class CompaniesMethods:
             f"Ошибка! Первым языком в 'description_lang' должен стоять '{first_language_by_default}', " \
             f"а мы получаем '{''.join(first_language)}'"
 
-
-### Старые методы
-
-
-
-
-    def assert_response_message_about_error_404(self, company_id):
+    def validate_language(self, language):
         """
-        Валидация 404 ошибки. В нем должен быть указан тот company_id, что и в URI
+        Валидация языка в тексте.
         """
-        for key, value in self.response.json().get("detail").items():
-            assert value == f"Company with requested id: {company_id} is absent", self
-            return self
+        alphabets = {"RU": "абвгдеёжзийклмнопрстуфхцчшщъыьэюя",
+                     "EN": "abcdefghijklmnopqrstuvwxyz",
+                     "PL": "aąbcćdeęfghijklłmnńoóprsśtuwyzźż",
+                     "UA": "абвгґдеєжзиіїйклмнопрстуфхцчшщьюя"}
+        symbols = alphabets[language]
 
+        # удаляем все символы, отличные от букв, влключая пробелы. Потом убираем дублирующиеся буквы
+        text = re.sub(r'[^\w\s]', '', self.response.json().get("description")).lower()
+        text = set(text.replace(" ", ""))
 
-
-    def assert_language(self, lang):
-        """
-        Валидация текста языка в тексте. Функция принимает алфавит и сверяет соответствие
-        """
-        text = self.response.json().get("description").split()  # [каждое, слово, отдельно]
-        text = ''.join(text)  # вернулитекстизспискаудалилипробелы
-        only_text = re.sub(r'[^\w\s]', '', text)  # удаляем все символы, отличные от букв
-
-        for words in only_text:
-            assert words.lower() in lang
-            return self
+        assert all(word in symbols for word in text), f"Ошибка! Символы в тексте не соответствуюет языку: '{language}'"

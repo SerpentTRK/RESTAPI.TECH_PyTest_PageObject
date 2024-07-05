@@ -48,6 +48,15 @@ class GlobalMethods:
             assert value == self.response.headers.get(header), self
         # return self
 
+    def validate_json_schema(self, schema):
+        """
+        Валидация JSON-схемы
+        """
+        if isinstance(self.response.json(), list):
+            for item in self.response.json():
+                schema.model_validate(item)
+        else:
+            schema.model_validate(self.response.json())
 
     def __str__(self):
         return f"\nRequested Url: {self.response.url} \n" \
