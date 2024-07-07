@@ -348,37 +348,85 @@ def test_013_get_company_by_id_and_unsupported_language():
     test_object_companies.validate_uri_in_request_and_response(baseUrl_companies + company_id)
     test_object_companies.validate_first_language()
 
+@pytest.mark.companies
+@pytest.mark.xfail(raises=AssertionError)
+def test_014_issues__get_companies_with_limit_offset_and_status_company():
+    """
+    Это специальный тест, где мы получим заведомо не верный ответ от сервера.
+    Получение списка компаний с указанием limit=1 ,offset=1 и status_company = ACTIVE
+
+    Ожидаемый результат:
+        татус-код 200;
+        Время ответа сервера - не превышает 1000ms; (на боевых не должно быть больше 500)
+        Схема JSON-ответа соответствует Требованиям;
+        Response header "Content-Type": "application/json"
+        Response header "Connection": "keep-alive"
+
+    Полученный результат: падает валидация offset и company-status:
+        Ошибка! offset: 1. Ожидаемое значение 'company_id': 2, фактически значение 'company_id': 6
+        Ошибка! Ожидали 'company_status': ACTIVE, а получили CLOSED
+    """
+    parameters = {"limit": 1, "offset": 1, "status": "ACTIVE"}
+    response_object = requests.get("https://restapi.tech/api/issues/companies", params=parameters)
+
+    test_object = GlobalMethods(response_object)
+    test_object.basic_checks_collection()
+    test_object.validate_json_schema(ModelCompanies200)
+
+    test_object_companies = CompaniesMethods(response_object)
+    test_object_companies.validate_companies_quantity(1)
+    test_object_companies.validate_offset(1)
+    test_object_companies.validate_companies_statuses("ACTIVE")
+
+@pytest.mark.companies
+@pytest.mark.xfail(raises=AssertionError)
+def test_015_issues_get_companies_by_id():
+    """
+    Это специальный тест, где мы получим заведомо не верный ответ от сервера.
+    Получение компании по company_id
+
+    Ожидаемый результат:
+        Запрос успешно отправлен;
+        Статус-код 200;
+        Время ответа сервера - не превышает 500ms;
+        Схема JSON-ответа соответствует требованиям;
+        Response header "Content-Type" - "application/json"
+        Response header "Connection" - "keep-alive"
+        В JSON - company_id совпадает с id URI и первый в списке поддерживаемых языков EN;
+
+    Полученный результат: Превышено время ожидания ответа от сервера
+    """
+    company_id = "2"
+    response_object = requests.get("https://restapi.tech/api/issues/companies/" + company_id)
+
+    test_object = GlobalMethods(response_object)
+    test_object.basic_checks_collection()
+    test_object.validate_json_schema(ModelCompanies200)
 
 @pytest.mark.skip("Это черновик")
 def test_test():
     """
     черновик
+    print(response_object.__getstate__())  # вообще все выгружается, что есть
     """
     import re
 
-    company_id = "/1"
-    query_parameter, value = "Accept-Language", "RU"
-    headers = {query_parameter: value}
-    response_object = requests.get(url=baseUrl_companies + company_id, headers=headers)
+    parameters = {"limit": 1, "offset": 1, "status": "ACTIVE"}
+    response_object = requests.get("https://restapi.tech/api/issues/companies", params=parameters)
 
-    # # вообще все выгружается, что есть
-    # print(response_object.__getstate__())
+    test_object = GlobalMethods(response_object)
+    test_object.basic_checks_collection()
+    test_object.validate_json_schema(ModelCompanies200)
 
-    ru_alphabet = "абвгдеёжзийклмнопрстуфхцчшщъыьэюя"
-    en_alphabet = "abcdefghijklmnopqrstuvwxyz"
-    pl_alphabet = "aąbcćdeęfghijklłmnńoóprsśtuwyzźż"
-    ua_alphabet = "абвгґдеєжзиіїйклмнопрстуфхцчшщьюя"
+    test_object_companies = CompaniesMethods(response_object)
+    test_object_companies.validate_companies_quantity(1)
 
-    alphabets = {"RU": ru_alphabet, "EN": en_alphabet, "PL": pl_alphabet, "UA": ua_alphabet}
-    symbols = alphabets["RU"]
-    print(symbols)
-
-    text = response_object.json().get("description")
-    text = re.sub(r'[^\w\s]', '', text).lower()
-    text = set(text.replace(" ", ""))
+    # @pytest.mark.xfail(raises=AssertionError)
+    test_object_companies.validate_companies_statuses("ACTIVE")
+    test_object_companies.validate_offset(1)
 
 
-    assert all(word in symbols for word in text)
+        # print(response_object.json())
 
 
 
