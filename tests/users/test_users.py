@@ -31,11 +31,7 @@ def test_016_get_users_with_limit_and_offset():
 
     test_object_users = UsersMethods(response_object)
     test_object_users.validate_users_quantity(limit_value)
-
-
-
-
-    print(response_object.json())
+    test_object_users.offset_validation(offset_value)
 
 
 
