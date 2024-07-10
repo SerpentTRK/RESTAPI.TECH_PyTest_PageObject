@@ -44,3 +44,5 @@ class UsersMethods:
         check.equal(expected_user_id, received_user_id,
                     msg=f"Ошибка! Со значением offset={offset_value} первым в списке должен находиться 'user_id': "
                         f"{expected_user_id}, а по факту на первой строчке стоит 'user_id': {received_user_id}")
+
+

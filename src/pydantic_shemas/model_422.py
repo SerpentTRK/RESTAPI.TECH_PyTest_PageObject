@@ -11,6 +11,8 @@ class DataFromDetail(BaseModel):
     type: str
     loc: list[str]
     msg: str
+    input: str
+    url: str = None
     ctx: Ctx = None  # не обязательное поле
 
 class Model422(BaseModel):

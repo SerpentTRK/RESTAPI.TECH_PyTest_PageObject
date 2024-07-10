@@ -63,6 +63,39 @@ def test_017_get_users_with_incorrect_limit():
     test_object.validate_response_header("Connection", "keep-alive")
     test_object.validate_time_from_request_to_response()
 
+@pytest.mark.users
+def test_018_get_users_with_incorrect_str_limit_and_offset():
+    """
+    Получить список пользователей с query-параметрами limit = abc и offset = abc
+
+    Ожидаемый результат:
+        Запрос успешно отправлен;
+        Статус-код 422;
+        Время ответа сервера - не превышает 500ms;
+        Схема JSON-ответа соответствует требованиям;
+        Response header "Content-Type" - "application/json"
+        Response header "Connection" - "keep-alive"
+        Соединение безопасное, порт 443
+        В JSON присутствует описание ошибки
+    """
+
+    limit_value, offset_value = "abc", "abc"
+    parameters = {"limit": limit_value, "offset": offset_value}
+    response_object = requests.get(baseUrl_users, params=parameters)
+
+    test_object = GlobalMethods(response_object)
+    test_object.validate_status_code(422)
+    test_object.validate_json_schema(Model422)
+    test_object.validate_response_header("Content-type", "application/json")
+    test_object.validate_response_header("Connection", "keep-alive")
+    test_object.validate_time_from_request_to_response()
+
+    test_object.validate_error_message_with_status_code_422("limit", limit_value)
+    test_object.validate_error_message_with_status_code_422("offset", offset_value)
+
+@pytest.mark.users
+def test_019():
+    pass
 
 
 @pytest.mark.skip("Это черновик")

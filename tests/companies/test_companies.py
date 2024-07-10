@@ -80,7 +80,7 @@ def test_003_get_companies_with_limit_and_offset():
 
     test_object_companies = CompaniesMethods(response_object)
     test_object_companies.validate_limit(limit_value)
-    test_object_companies.validate_offset(offset_value)
+    test_object_companies.offset_validation(offset_value)
 
 @pytest.mark.companies
 @pytest.mark.parametrize("company_status", [("ACTIVE"), ("CLOSED"), ("BANKRUPT")])
@@ -131,8 +131,7 @@ def test_005_get_compani_with_incorrect_status_ABCDE():
     test_object.validate_response_header("Connection", "keep-alive")
     test_object.validate_time_from_request_to_response()
 
-    test_object_companies = CompaniesMethods(response_object)
-    test_object_companies.validate_error_message_with_status_code_422(query_parameter, value)
+    test_object.validate_error_message_with_status_code_422(query_parameter, value)
 
 @pytest.mark.skip("{id записи об ошибке} Вместо 422 получаем статус-код 200. Skip-аем пока не починят")
 @pytest.mark.companies
@@ -188,8 +187,7 @@ def test_007_get_companies_with_incorrect_str_query_limit():
     test_object.validate_response_header("Connection", "keep-alive")
     test_object.validate_time_from_request_to_response()
 
-    test_object_companies = CompaniesMethods(response_object)
-    test_object_companies.validate_error_message_with_status_code_422(query_parameter, value)
+    test_object.validate_error_message_with_status_code_422(query_parameter, value)
 
 @pytest.mark.companies
 def test_008_companies_with_incorrect_int_query_offset():
@@ -241,8 +239,7 @@ def test_009_companies_with_incorrect_str_query_offset():
     test_object.validate_response_header("Connection", "keep-alive")
     test_object.validate_time_from_request_to_response()
 
-    test_object_companies = CompaniesMethods(response_object)
-    test_object_companies.validate_error_message_with_status_code_422(query_parameter, value)
+    test_object.validate_error_message_with_status_code_422(query_parameter, value)
 
 @pytest.mark.companies
 def test_010_get_company_by_id():

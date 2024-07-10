@@ -33,7 +33,7 @@ class CompaniesMethods:
                     msg=f"Ошибка! В JSON-DATA ожидали {company_limit} компании, "
                         f"а фактическое значение = {count_company_id}")
 
-    def validate_offset(self, offset_value):
+    def offset_validation(self, offset_value):
         """
         Валидация работы offset
         Проверить работу offset мы можем, выбрав значения company_id. Зная, что первый company_id == 1, offset даст
@@ -51,25 +51,6 @@ class CompaniesMethods:
                     msg=f"Ошибка! offset: {offset_value}. "
                         f"Ожидаемое значение 'company_id': {first_company_id + offset_value}, "
                         f"фактически значение 'company_id': {list_company_id_values[0]}")
-
-    def validate_error_message_with_status_code_422(self, query_parameter, value):
-        """
-        Валидация сообщений об ошибках для разных query-параметров
-        """
-        if query_parameter == "status":
-            error_message = "Input should be 'ACTIVE', 'CLOSED' or 'BANKRUPT'"
-        if query_parameter in ["limit", "offset"]:
-            error_message = "Input should be a valid integer, unable to parse string as an integer"
-
-        for elem in self.response.json().get("detail"):
-            # assert elem["msg"] == error_message, \
-            #     f"Ошибка! Ожидаемый текст ошибки: '{error_message}' не совпадает с полученным: '{elem['msg']}'"
-            # assert elem["input"] == value, \
-            #     f"Ошибка! Отправленное значение: {value} не совпадает с полученным: {elem['input']}"
-            check.equal(elem["msg"], error_message,
-                    msg=f"Ошибка! Ожидаемый текст ошибки: '{error_message}' не совпадает с полученным: '{elem['msg']}'")
-            check.equal(elem["input"], value,
-                    msg=f"Ошибка! Отправленное значение: {value} не совпадает с полученным: {elem['input']}")
 
     def validate_response_message_about_error_404(self, company_id):
         """
