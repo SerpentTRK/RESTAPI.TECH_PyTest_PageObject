@@ -62,10 +62,14 @@ class CompaniesMethods:
             error_message = "Input should be a valid integer, unable to parse string as an integer"
 
         for elem in self.response.json().get("detail"):
-            assert elem["msg"] == error_message, \
-                f"Ошибка! Ожидаемый текст ошибки: '{error_message}' не совпадает с полученным: '{elem['msg']}'"
-            assert elem["input"] == value, \
-                f"Ошибка! Отправленное значение: {value} не совпадает с полученным: {elem['input']}"
+            # assert elem["msg"] == error_message, \
+            #     f"Ошибка! Ожидаемый текст ошибки: '{error_message}' не совпадает с полученным: '{elem['msg']}'"
+            # assert elem["input"] == value, \
+            #     f"Ошибка! Отправленное значение: {value} не совпадает с полученным: {elem['input']}"
+            check.equal(elem["msg"], error_message,
+                    msg=f"Ошибка! Ожидаемый текст ошибки: '{error_message}' не совпадает с полученным: '{elem['msg']}'")
+            check.equal(elem["input"], value,
+                    msg=f"Ошибка! Отправленное значение: {value} не совпадает с полученным: {elem['input']}")
 
     def validate_response_message_about_error_404(self, company_id):
         """
@@ -73,16 +77,21 @@ class CompaniesMethods:
         """
         company_id = company_id.replace("/", "")
         for key, value in self.response.json().get("detail").items():
-            assert value == f"Company with requested id: {company_id} is absent", \
-                f"Ошибка! В запросе был company_id: '{company_id}', " \
-                f"а по факту получили {''.join(c for c in value if c.isdigit())}"
+            # assert value == f"Company with requested id: {company_id} is absent", \
+            #     f"Ошибка! В запросе был company_id: '{company_id}', " \
+            #     f"а по факту получили {''.join(c for c in value if c.isdigit())}"
+            check.equal(value, f"Company with requested id: {company_id} is absent",
+                        msg=f"Ошибка! В запросе был company_id: '{company_id}', "
+                            f"а по факту получили {''.join(c for c in value if c.isdigit())}")
 
     def validate_uri_in_request_and_response(self, request_uri):
         """
         Сравниваем URI из запроса и ответа
         """
-        assert self.response.url == request_uri, \
-            f"Ошибка! URI запроса: {request_uri} не совпадает с URI ответа: {self.response.url}"
+        # assert self.response.url == request_uri, \
+        #     f"Ошибка! URI запроса: {request_uri} не совпадает с URI ответа: {self.response.url}"
+        check.equal(self.response.url, request_uri,
+                    msg=f"Ошибка! URI запроса: {request_uri} не совпадает с URI ответа: {self.response.url}")
 
     def validate_first_language(self):
         """
@@ -92,9 +101,12 @@ class CompaniesMethods:
         data_object = self.response.json().get("description_lang")[0]
         first_language = [value for key, value in data_object.items() if key == "translation_lang"]
 
-        assert "".join(first_language) == first_language_by_default, \
-            f"Ошибка! Первым языком в 'description_lang' должен стоять '{first_language_by_default}', " \
-            f"а мы получаем '{''.join(first_language)}'"
+        # assert "".join(first_language) == first_language_by_default, \
+        #     f"Ошибка! Первым языком в 'description_lang' должен стоять '{first_language_by_default}', " \
+        #     f"а мы получаем '{''.join(first_language)}'"
+        check.equal("".join(first_language), first_language_by_default,
+                    msg=f"Ошибка! Первым языком в 'description_lang' должен стоять '{first_language_by_default}', "
+                        f"а мы получаем '{''.join(first_language)}'")
 
     def validate_language(self, language):
         """
@@ -110,4 +122,6 @@ class CompaniesMethods:
         text = re.sub(r'[^\w\s]', '', self.response.json().get("description")).lower()
         text = set(text.replace(" ", ""))
 
-        assert all(word in symbols for word in text), f"Ошибка! Символы в тексте не соответствуюет языку: '{language}'"
+        # assert all(word in symbols for word in text), f"Ошибка! Символы в тексте не соответствуюет языку: '{language}'"
+        for word in text:
+            check.is_in(word, symbols, msg=f"Ошибка! Символы в тексте не соответствуюет языку: '{language}'")
