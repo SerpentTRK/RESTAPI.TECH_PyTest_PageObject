@@ -402,7 +402,7 @@ def test_015_issues_get_companies_by_id():
     test_object = GlobalMethods(response_object)
     test_object.basic_checks_collection()
     test_object.validate_json_schema(ModelCompany200)
-    print(response_object.elapsed)
+
 
 
 

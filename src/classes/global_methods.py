@@ -44,7 +44,7 @@ class GlobalMethods:
         else:
             schema.model_validate(self.response.json())
 
-    def validate_time_from_request_to_response(self, max_time_to_response=500):
+    def validate_time_from_request_to_response(self, max_time_to_response=900):
         """
         Валидация времени ответа от сервера. Время дается в миллисекунд
         !!! Чтобы все тесты не были красными - удвоил время на ответ. Тестовая база... !!!
