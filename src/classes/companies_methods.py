@@ -20,17 +20,17 @@ class CompaniesMethods:
             check.equal(item["company_status"], company_status,
                         msg=f"Ошибка! Ожидали 'company_status': {company_status}, а получили {item['company_status']}")
 
-    def validate_companies_quantity(self, company_quantity):
+    def validate_limit(self, company_limit):
         """
-        Валидация количества компаний
+        Валидация количества компаний Limit
         """
         data_object = self.response.json().get("data")
         count_company_id = sum(1 for item in data_object if 'company_id' in item)
 
         # assert count_company_id == company_quantity, \
         #     f"Ошибка! В JSON-DATA ожидали {company_quantity} компании, а фактическое значение = {count_company_id}"
-        check.equal(count_company_id, company_quantity,
-                    msg=f"Ошибка! В JSON-DATA ожидали {company_quantity} компании, "
+        check.equal(count_company_id, company_limit,
+                    msg=f"Ошибка! В JSON-DATA ожидали {company_limit} компании, "
                         f"а фактическое значение = {count_company_id}")
 
     def validate_offset(self, offset_value):

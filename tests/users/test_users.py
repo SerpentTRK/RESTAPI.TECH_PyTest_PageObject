@@ -3,12 +3,15 @@ import pytest
 import requests
 
 from src.configuration import baseUrl_users
+
 from src.classes.global_methods import GlobalMethods
 from src.classes.users_methods import UsersMethods
 
 from src.pydantic_shemas.model_user_200 import ModelUser200
+from src.pydantic_shemas.model_422 import Model422
 
 
+@pytest.mark.users
 def test_016_get_users_with_limit_and_offset():
     """
     Получить список пользователей с query-параметрами limit = 10 и offset = 5
@@ -30,9 +33,35 @@ def test_016_get_users_with_limit_and_offset():
     test_object.validate_json_schema(ModelUser200)
 
     test_object_users = UsersMethods(response_object)
-    test_object_users.validate_users_quantity(limit_value)
+    test_object_users.limit_validation(limit_value)
     test_object_users.offset_validation(offset_value)
 
+@pytest.mark.skip("{id записи об ошибке} Вместо 422 получаем статус-код 200. Skip-аем пока не починят")
+@pytest.mark.users
+def test_017_get_users_with_incorrect_limit():
+    """
+    Получить список пользователей с отрицательным query-параметрам limit = -1
+
+    Ожидаемый результат:
+        Статус-код 422;
+        Время ответа сервера - не превышает 500ms;
+        Схема JSON-ответа соответствует Требованиям;
+        Response header "Content-Type": "application/json"
+        Response header "Connection": "keep-alive"
+        В JSON присутствует описание ошибки
+
+    Полученный результат: Выгружены все пользователи из БД, статус-код 200
+    """
+    limit_value = -1
+    parameters = {"limit": limit_value}
+    response_object = requests.get(baseUrl_users, params=parameters)
+
+    test_object = GlobalMethods(response_object)
+    test_object.validate_status_code(422)
+    test_object.validate_json_schema(Model422)
+    test_object.validate_response_header("Content-type", "application/json")
+    test_object.validate_response_header("Connection", "keep-alive")
+    test_object.validate_time_from_request_to_response()
 
 
 

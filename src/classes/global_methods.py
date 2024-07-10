@@ -32,7 +32,8 @@ class GlobalMethods:
         Валидация заголовков ответа.
         """
         if header in self.response.headers:
-            assert value == self.response.headers.get(header), self
+            # assert value == self.response.headers.get(header), self
+            check.equal(value, self.response.headers.get(header), msg=self)
 
     def validate_json_schema(self, schema):
         """

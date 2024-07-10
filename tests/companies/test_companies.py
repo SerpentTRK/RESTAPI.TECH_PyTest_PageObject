@@ -33,7 +33,7 @@ def test_001_get_companies_default_request():
     test_object.validate_json_schema(ModelCompanies200)
 
     test_object_companies = CompaniesMethods(response_object)
-    test_object_companies.validate_companies_quantity(3)
+    test_object_companies.validate_limit(3)
     test_object_companies.validate_companies_statuses("ACTIVE")
 
 @pytest.mark.companies
@@ -79,7 +79,7 @@ def test_003_get_companies_with_limit_and_offset():
     test_object.validate_json_schema(ModelCompanies200)
 
     test_object_companies = CompaniesMethods(response_object)
-    test_object_companies.validate_companies_quantity(5)
+    test_object_companies.validate_limit(limit_value)
     test_object_companies.validate_offset(offset_value)
 
 @pytest.mark.companies
@@ -214,7 +214,7 @@ def test_008_companies_with_incorrect_int_query_offset():
     test_object.validate_json_schema(ModelCompanies200)
 
     test_object_companies = CompaniesMethods(response_object)
-    test_object_companies.validate_companies_quantity(3)
+    test_object_companies.validate_limit(3)
     test_object_companies.validate_companies_statuses("ACTIVE")
 
 @pytest.mark.companies
@@ -374,7 +374,7 @@ def test_014_issues_get_companies_with_limit_offset_and_status_company():
     test_object.validate_json_schema(ModelCompanies200)
 
     test_object_companies = CompaniesMethods(response_object)
-    test_object_companies.validate_companies_quantity(1)
+    test_object_companies.validate_limit(1)
     test_object_companies.validate_offset(1)
     test_object_companies.validate_companies_statuses("ACTIVE")
 

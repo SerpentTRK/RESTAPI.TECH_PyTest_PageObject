@@ -9,7 +9,7 @@ class UsersMethods:
     def __init__(self, response):
         self.response = response
 
-    def validate_users_quantity(self, users_quantity):
+    def limit_validation(self, limit_value):
         """
         Валидация работы limit. Должно быть выведено заданное количество пользователей
         """
@@ -18,8 +18,8 @@ class UsersMethods:
 
         # assert count_user_id == users_quantity, \
         #     f"Ошибка! В JSON-DATA ожидали {users_quantity} компании, а фактическое значение = {count_user_id}"
-        check.equal(count_user_id, users_quantity,
-                    msg=f"Ошибка! В JSON-DATA ожидали {users_quantity} компании, "
+        check.equal(count_user_id, limit_value,
+                    msg=f"Ошибка! В JSON-DATA ожидали {limit_value} компании, "
                         f"а фактическое значение = {count_user_id}")
 
     def offset_validation(self, offset_value):
