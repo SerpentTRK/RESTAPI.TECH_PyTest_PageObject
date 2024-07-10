@@ -46,3 +46,17 @@ class UsersMethods:
                         f"{expected_user_id}, а по факту на первой строчке стоит 'user_id': {received_user_id}")
 
 
+    def user_validation(self, first_name, last_name, company_id):
+        """
+        Проверка на соответствие того, что пользователь в БД именно такой, каким его создали
+        """
+        for key, value in self.response.json().items():
+            print(key, self.response.json()[key], value)
+
+
+            # if key == "first_name" and value != first_name:
+            #     raise ValueError("Имя не совпадает")
+            # if key == "last_name" and value != last_name:
+            #     raise ValueError("Фамилия не совпадает")
+            # if key == "company_id" and value != company_id:
+            #     raise ValueError("Id не совпадает")

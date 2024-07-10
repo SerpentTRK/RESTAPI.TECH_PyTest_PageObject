@@ -2,7 +2,7 @@
 import pytest
 import requests
 
-from src.configuration import baseUrl_users
+from src.configuration import baseUrl_users, first_name_value, last_name_value, company_id
 
 from src.classes.global_methods import GlobalMethods
 from src.classes.users_methods import UsersMethods
@@ -103,7 +103,7 @@ def test_019_get_users_list_by_http():
         Время ответа сервера - не превышает 500ms;
         Response url == "http://restapi.tech/api/users"
         Response header "Location" - "https://send-request.me/api/users/"
-        Response header "Connection" - "keep-alive"
+        Response header "Connection": "keep-alive"
     """
     response_object = requests.get("http://restapi.tech/api/users", allow_redirects=False)
 
@@ -113,6 +113,31 @@ def test_019_get_users_list_by_http():
     test_object.validate_time_from_request_to_response()
     assert response_object.url == "http://restapi.tech/api/users"
     assert response_object.headers["Location"] == "https://restapi.tech/api/users"
+
+@pytest.mark.users
+def test_020_create_user(create_and_dalete_user):
+    """
+    Зарегистрировать нового пользователя
+
+    Ожидаемый результат:
+        Статус-код 201;
+        Время ответа сервера - не превышает 500ms;
+        Схема JSON-ответа соответствует Требованиям;
+        Response header "Content-Type": "application/json"
+        Response header "Connection": "keep-alive"
+        Новая запись JSON ответа соответствует тому, что мы отправляли при регистрации + содержит Id созданного юзера
+    """
+    # first_name_value, last_name_value, company_id
+    test_object = GlobalMethods(create_and_dalete_user)
+    test_object.validate_status_code(201)
+    test_object.validate_response_header("Content-type", "application/json")
+    test_object.validate_response_header("Connection", "keep-alive")
+
+    test_object_users = UsersMethods(create_and_dalete_user)
+    test_object_users.user_validation(first_name_value, last_name_value, company_id)
+
+
+
 
 @pytest.mark.skip("Это черновик")
 def test_test():
