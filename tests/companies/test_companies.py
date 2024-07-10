@@ -20,7 +20,7 @@ def test_001_get_companies_default_request():
 
     Ожидаемый результат:
         Статус-код 200;
-        Время ответа сервера - не превышает 1000ms; (на боевых не должно быть больше 500)
+        Время ответа сервера - не превышает 500ms;
         Схема JSON-ответа соответствует Требованиям;
         Response header "Content-Type": "application/json"
         Response header "Connection": "keep-alive"
@@ -43,7 +43,7 @@ def test_002_get_companies_without_ssl():
 
     Ожидаемый результат:
         Статус-код 301;
-        Время ответа сервера - не превышает 1000ms; (на боевых не должно быть больше 500)
+        Время ответа сервера - не превышает 500ms;
         Response url == "http://restapi.tech/api/companies"
         Response header "Location" == "https://send-request.me/api/companies/"
         Response header "Connection": "keep-alive"
@@ -53,7 +53,7 @@ def test_002_get_companies_without_ssl():
     test_object = GlobalMethods(response_object)
     test_object.validate_status_code(301)
     test_object.validate_response_header("Connection", "keep-alive")
-    test_object.validate_time_from_request_to_response(1000)
+    test_object.validate_time_from_request_to_response()
     assert response_object.url == "http://restapi.tech/api/companies"
     assert response_object.headers["Location"] == "https://restapi.tech/api/companies"
 
@@ -64,7 +64,7 @@ def test_003_get_companies_with_limit_and_offset():
 
     Ожидаемый результат:
         Статус-код 200;
-        Время ответа сервера - не превышает 1000ms; (на боевых не должно быть больше 500)
+        Время ответа сервера - не превышает 500ms;
         Схема JSON-ответа соответствует Требованиям;
         Response header "Content-Type": "application/json"
         Response header "Connection": "keep-alive"
@@ -90,7 +90,7 @@ def test_004_get_companies_with_different_query_statuses(company_status):
 
     Ожидаемый результат:
         Статус-код 200;
-        Время ответа сервера - не превышает 1000ms; (на боевых не должно быть больше 500)
+        Время ответа сервера - не превышает 500ms;
         Схема JSON-ответа соответствует Требованиям;
         Response header "Content-Type": "application/json"
         Response header "Connection": "keep-alive"
@@ -114,7 +114,7 @@ def test_005_get_compani_with_incorrect_status_ABCDE():
 
     Ожидаемый результат:
         Статус-код 422;
-        Время ответа сервера - не превышает 1000ms; (на боевых не должно быть больше 500)
+        Время ответа сервера - не превышает 500ms;
         Схема JSON-ответа соответствует требованиям;
         Response header "Content-Type": "application/json"
         Response header "Connection": "keep-alive"
@@ -129,7 +129,7 @@ def test_005_get_compani_with_incorrect_status_ABCDE():
     test_object.validate_json_schema(Model422)
     test_object.validate_response_header("Content-Type", "application/json")
     test_object.validate_response_header("Connection", "keep-alive")
-    test_object.validate_time_from_request_to_response(1000)
+    test_object.validate_time_from_request_to_response()
 
     test_object_companies = CompaniesMethods(response_object)
     test_object_companies.validate_error_message_with_status_code_422(query_parameter, value)
@@ -142,7 +142,7 @@ def test_006_get_companies_with_incorrect_int_query_limit():
 
     Ожидаемый результат:
         Статус-код 422;
-        Время ответа сервера - не превышает 1000ms; (на боевых не должно быть больше 500)
+        Время ответа сервера - не превышает 500ms;
         Схема JSON-ответа соответствует требованиям;
         Response header "Content-Type": "application/json"
         Response header "Connection": "keep-alive"
@@ -159,7 +159,7 @@ def test_006_get_companies_with_incorrect_int_query_limit():
     test_object.validate_json_schema(Model422)
     test_object.validate_response_header("Content-Type", "application/json")
     test_object.validate_response_header("Connection", "keep-alive")
-    test_object.validate_time_from_request_to_response(1000)
+    test_object.validate_time_from_request_to_response()
 
     # если бы это была не учебная база, то можно было бы провалидировать и сообщение об ошибке, но мы не знаем этого
     # сообщения, потому и метод создать для этого случая не можем
@@ -171,7 +171,7 @@ def test_007_get_companies_with_incorrect_str_query_limit():
 
     Ожидаемый результат:
         Статус-код 422;
-        Время ответа сервера - не превышает 1000ms; (на боевых не должно быть больше 500)
+        Время ответа сервера - не превышает 500ms;
         Схема JSON-ответа соответствует требованиям;
         Response header "Content-Type": "application/json"
         Response header "Connection": "keep-alive"
@@ -186,7 +186,7 @@ def test_007_get_companies_with_incorrect_str_query_limit():
     test_object.validate_json_schema(Model422)
     test_object.validate_response_header("Content-Type", "application/json")
     test_object.validate_response_header("Connection", "keep-alive")
-    test_object.validate_time_from_request_to_response(1000)
+    test_object.validate_time_from_request_to_response()
 
     test_object_companies = CompaniesMethods(response_object)
     test_object_companies.validate_error_message_with_status_code_422(query_parameter, value)
@@ -198,7 +198,7 @@ def test_008_companies_with_incorrect_int_query_offset():
 
     Ожидаемый результат:
         Статус-код 200;
-        Время ответа сервера - не превышает 1000ms; (на боевых не должно быть больше 500)
+        Время ответа сервера - не превышает 500ms;
         Схема JSON-ответа соответствует Требованиям;
         Response header "Content-Type": "application/json"
         Response header "Connection": "keep-alive"
@@ -224,7 +224,7 @@ def test_009_companies_with_incorrect_str_query_offset():
 
     Ожидаемый результат:
         Статус-код 422;
-        Время ответа сервера - не превышает 1000ms; (на боевых не должно быть больше 500)
+        Время ответа сервера - не превышает 500ms;
         Схема JSON-ответа соответствует требованиям;
         Response header "Content-Type": "application/json"
         Response header "Connection": "keep-alive"
@@ -239,7 +239,7 @@ def test_009_companies_with_incorrect_str_query_offset():
     test_object.validate_json_schema(Model422)
     test_object.validate_response_header("Content-Type", "application/json")
     test_object.validate_response_header("Connection", "keep-alive")
-    test_object.validate_time_from_request_to_response(1000)
+    test_object.validate_time_from_request_to_response()
 
     test_object_companies = CompaniesMethods(response_object)
     test_object_companies.validate_error_message_with_status_code_422(query_parameter, value)
@@ -251,7 +251,7 @@ def test_010_get_company_by_id():
 
     Ожидаемый результат:
         Статус-код 200;
-        Время ответа сервера - не превышает 1000ms; (на боевых не должно быть больше 500)
+        Время ответа сервера - не превышает 500ms;
         Схема JSON-ответа соответствует Требованиям;
         Response header "Content-Type": "application/json"
         Response header "Connection": "keep-alive"
@@ -275,7 +275,7 @@ def test_011_get_company_by_incorrect_id():
 
     Ожидаемый результат:
         Статус-код 404;
-        Время ответа сервера - не превышает 1000ms; (на боевых не должно быть больше 500)
+        Время ответа сервера - не превышает 500ms;
         Схема JSON-ответа соответствует Требованиям;
         Response header "Content-Type": "application/json"
         Response header "Connection": "keep-alive"
@@ -290,7 +290,7 @@ def test_011_get_company_by_incorrect_id():
     test_object.validate_status_code(404)
     test_object.validate_response_header("Content-Type", "application/json")
     test_object.validate_response_header("Connection", "keep-alive")
-    test_object.validate_time_from_request_to_response(1000)
+    test_object.validate_time_from_request_to_response()
 
     test_object_companies = CompaniesMethods(response_object)
     test_object_companies.validate_response_message_about_error_404(company_id)
@@ -301,7 +301,7 @@ def test_012_get_company_by_id_and_supported_language():
 
     Ожидаемый результат:
         Статус-код 200;
-        Время ответа сервера - не превышает 1000ms; (на боевых не должно быть больше 500)
+        Время ответа сервера - не превышает 500ms;
         Схема JSON-ответа соответствует Требованиям;
         Response header "Content-Type": "application/json"
         Response header "Connection": "keep-alive"
@@ -349,15 +349,15 @@ def test_013_get_company_by_id_and_unsupported_language():
     test_object_companies.validate_first_language()
 
 @pytest.mark.companies
-@pytest.mark.xfail(raises=AssertionError)
-def test_014_issues__get_companies_with_limit_offset_and_status_company():
+# @pytest.mark.xfail(raises=AssertionError)
+def test_014_issues_get_companies_with_limit_offset_and_status_company():
     """
     Это специальный тест, где мы получим заведомо не верный ответ от сервера.
     Получение списка компаний с указанием limit=1 ,offset=1 и status_company = ACTIVE
 
     Ожидаемый результат:
         татус-код 200;
-        Время ответа сервера - не превышает 1000ms; (на боевых не должно быть больше 500)
+        Время ответа сервера - не превышает 500ms;
         Схема JSON-ответа соответствует Требованиям;
         Response header "Content-Type": "application/json"
         Response header "Connection": "keep-alive"
@@ -379,7 +379,7 @@ def test_014_issues__get_companies_with_limit_offset_and_status_company():
     test_object_companies.validate_companies_statuses("ACTIVE")
 
 @pytest.mark.companies
-@pytest.mark.xfail(raises=AssertionError)
+# @pytest.mark.xfail(raises=AssertionError)
 def test_015_issues_get_companies_by_id():
     """
     Это специальный тест, где мы получим заведомо не верный ответ от сервера.
@@ -401,7 +401,11 @@ def test_015_issues_get_companies_by_id():
 
     test_object = GlobalMethods(response_object)
     test_object.basic_checks_collection()
-    test_object.validate_json_schema(ModelCompanies200)
+    test_object.validate_json_schema(ModelCompany200)
+    print(response_object.elapsed)
+
+
+
 
 @pytest.mark.skip("Это черновик")
 def test_test():
@@ -411,19 +415,18 @@ def test_test():
     """
     import re
 
-    parameters = {"limit": 1, "offset": 1, "status": "ACTIVE"}
-    response_object = requests.get("https://restapi.tech/api/issues/companies", params=parameters)
+    company_id = "2"
+    response_object = requests.get("https://restapi.tech/api/issues/companies/" + company_id)
 
-    test_object = GlobalMethods(response_object)
-    test_object.basic_checks_collection()
-    test_object.validate_json_schema(ModelCompanies200)
+    response_time = int(response_object.elapsed.seconds) + int(response_object.elapsed.microseconds) / 100
+    # print(response_object.elapsed.seconds, response_object.elapsed.microseconds, response_object.elapsed)
+    #
+    # print(response_object.elapsed.seconds)
 
-    test_object_companies = CompaniesMethods(response_object)
-    test_object_companies.validate_companies_quantity(1)
-
-    # @pytest.mark.xfail(raises=AssertionError)
-    test_object_companies.validate_companies_statuses("ACTIVE")
-    test_object_companies.validate_offset(1)
+    print(500, 500 * 10**-6)
+    print(response_object.elapsed, response_object.elapsed.microseconds * 10**-3)
+    # print(response_object.elapsed.seconds, response_object.elapsed.microseconds * 10**-6)
+    # print(response_object.elapsed.seconds + response_object.elapsed.microseconds * 10 ** -6)
 
 
         # print(response_object.json())

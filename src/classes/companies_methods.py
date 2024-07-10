@@ -1,8 +1,8 @@
+
+from pytest_check import check
 import re
 
-"""
-Во всех методах в конце поудалял "return self". В том году без этого не работало, а сейчас работает
-"""
+
 
 class CompaniesMethods:
     def __init__(self, response):
@@ -15,8 +15,10 @@ class CompaniesMethods:
         data_object = self.response.json().get("data")
 
         for item in data_object:
-            assert item["company_status"] == company_status, \
-                f"Ошибка! Ожидали 'company_status': {company_status}, а получили {item['company_status']}"
+            # assert item["company_status"] == company_status, \
+            #     f"Ошибка! Ожидали 'company_status': {company_status}, а получили {item['company_status']}"
+            check.equal(item["company_status"], company_status,
+                        msg=f"Ошибка! Ожидали 'company_status': {company_status}, а получили {item['company_status']}")
 
     def validate_companies_quantity(self, company_quantity):
         """
@@ -25,8 +27,11 @@ class CompaniesMethods:
         data_object = self.response.json().get("data")
         count_company_id = sum(1 for item in data_object if 'company_id' in item)
 
-        assert count_company_id == company_quantity, \
-            f"Ошибка! В JSON-DATA ожидали {company_quantity} компании, а фактическое значение = {count_company_id}"
+        # assert count_company_id == company_quantity, \
+        #     f"Ошибка! В JSON-DATA ожидали {company_quantity} компании, а фактическое значение = {count_company_id}"
+        check.equal(count_company_id, company_quantity,
+                    msg=f"Ошибка! В JSON-DATA ожидали {company_quantity} компании, "
+                        f"а фактическое значение = {count_company_id}")
 
     def validate_offset(self, offset_value):
         """
@@ -39,9 +44,13 @@ class CompaniesMethods:
         first_company_id = 1
 
         list_company_id_values = [value for item in data_object for key, value in item.items() if key == "company_id"]
-        assert first_company_id + offset_value == list_company_id_values[0], \
-            f"Ошибка! offset: {offset_value}. Ожидаемое значение 'company_id': {first_company_id + offset_value}, " \
-            f"фактически значение 'company_id': {list_company_id_values[0]}"
+        # assert first_company_id + offset_value == list_company_id_values[0], \
+        #     f"Ошибка! offset: {offset_value}. Ожидаемое значение 'company_id': {first_company_id + offset_value}, " \
+        #     f"фактически значение 'company_id': {list_company_id_values[0]}"
+        check.equal(first_company_id + offset_value, list_company_id_values[0],
+                    msg=f"Ошибка! offset: {offset_value}. "
+                        f"Ожидаемое значение 'company_id': {first_company_id + offset_value}, "
+                        f"фактически значение 'company_id': {list_company_id_values[0]}")
 
     def validate_error_message_with_status_code_422(self, query_parameter, value):
         """
