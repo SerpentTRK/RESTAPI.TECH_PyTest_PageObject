@@ -94,9 +94,25 @@ def test_018_get_users_with_incorrect_str_limit_and_offset():
     test_object.validate_error_message_with_status_code_422("offset", offset_value)
 
 @pytest.mark.users
-def test_019():
-    pass
+def test_019_get_users_list_by_http():
+    """
+    Получить списка компаний HTTP-запросом (не HTTPS)
 
+    Ожидаемый результат:
+        Статус-код 301;
+        Время ответа сервера - не превышает 500ms;
+        Response url == "http://restapi.tech/api/users"
+        Response header "Location" - "https://send-request.me/api/users/"
+        Response header "Connection" - "keep-alive"
+    """
+    response_object = requests.get("http://restapi.tech/api/users", allow_redirects=False)
+
+    test_object = GlobalMethods(response_object)
+    test_object.validate_status_code(301)
+    test_object.validate_response_header("Connection", "keep-alive")
+    test_object.validate_time_from_request_to_response()
+    assert response_object.url == "http://restapi.tech/api/users"
+    assert response_object.headers["Location"] == "https://restapi.tech/api/users"
 
 @pytest.mark.skip("Это черновик")
 def test_test():
