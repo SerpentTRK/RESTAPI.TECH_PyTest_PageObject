@@ -50,13 +50,13 @@ class UsersMethods:
         """
         Проверка на соответствие того, что пользователь в БД именно такой, каким его создали
         """
-        for key, value in self.response.json().items():
-            print(key, self.response.json()[key], value)
+        test_data = {"first_name": first_name, "last_name": last_name, "company_id": company_id}
+        response_data = self.response.json()
 
+        for key in response_data.keys():
+            if key in test_data:
+        #         assert test_data[key] == response_data[key], \
+        # f"Ошибка! Переданное значение '{test_data[key]}' не совпадает с зарегистрированным '{response_data[key]}'"
+                check.equal(test_data[key], response_data[key], msg=
+            f"Ошибка! Переданное значение '{test_data[key]}' не совпадает с зарегистрированным '{response_data[key]}'")
 
-            # if key == "first_name" and value != first_name:
-            #     raise ValueError("Имя не совпадает")
-            # if key == "last_name" and value != last_name:
-            #     raise ValueError("Фамилия не совпадает")
-            # if key == "company_id" and value != company_id:
-            #     raise ValueError("Id не совпадает")

@@ -372,7 +372,7 @@ def test_014_issues_get_companies_with_limit_offset_and_status_company():
 
     test_object_companies = CompaniesMethods(response_object)
     test_object_companies.validate_limit(1)
-    test_object_companies.validate_offset(1)
+    test_object_companies.offset_validation(1)
     test_object_companies.validate_companies_statuses("ACTIVE")
 
 @pytest.mark.companies
