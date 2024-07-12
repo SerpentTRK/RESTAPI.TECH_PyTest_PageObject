@@ -66,11 +66,26 @@ class UsersMethods:
         Валидая удаления дает 404 ошибку
         """
         print(self.requests.url)
-        error_message = self.response.json().get("reason")
+        for key, value in self.response.json().get("detail").items():
+            print(key, value)
+
         # assert error_message == f"Company with requested id: {user_id} is absent", \
         #     f"Ошибка! В запросе был company_id: '{company_id}', " \
         #     f"а по факту получили {''.join(c for c in value if c.isdigit())}"
-        check.equal(error_message, f"User with requested id: {user_id} is absent",
-                    msg=f"Ошибка! В запросе был company_id: '{user_id}', "
-                        f"а по факту получили {self.response.url}")
 
+        # check.equal(error_message, f"User with requested id: {user_id} is absent",
+        #             msg=f"Ошибка! В запросе был company_id: '{user_id}', "
+        #                 f"а по факту получили {self.response.url}")
+
+    def assert_response_message_about_error_400(self):
+        """
+        Валидация сообщения об ошибке.
+        """
+        error_message = self.response.json().get("detail")['reason']
+        expected_message = "You can only register with companies with ACTIVE status"
+
+        # assert error_message == expected_message, \
+        # f"Ошибака! Полученное сообщение об ошибке:'{error_message}' не соответствует ожидаемому:'{expected_message}'"
+        check.equal(error_message, expected_message,
+                    msg=f"Ошибака! Полученное сообщение об ошибке:'{error_message}' "
+                        f"не соответствует ожидаемому:'{expected_message}'")

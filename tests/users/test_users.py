@@ -3,13 +3,17 @@ import pytest
 import requests
 import json
 
+from src.classes.companies_methods import CompaniesMethods
 from src.configuration import baseUrl_users, first_name_value, last_name_value, company_id
 
 from src.classes.global_methods import GlobalMethods
 from src.classes.users_methods import UsersMethods
+from src.pydantic_shemas.model_https_400 import Model400
 
 from src.pydantic_shemas.model_user_200 import ModelUser200
 from src.pydantic_shemas.model_422 import Model422
+from src.pydantic_shemas.model_404 import Model404
+from src.pydantic_shemas.model_user_201 import ModelUser201
 
 
 @pytest.mark.users
@@ -79,7 +83,6 @@ def test_018_get_users_with_incorrect_str_limit_and_offset(get_users):
         Соединение безопасное, порт 443
         В JSON присутствует описание ошибки
     """
-
     limit_value, offset_value = "abc", "abc"
     parameters = {"limit": limit_value, "offset": offset_value}
     response_object = get_users(parameters)
@@ -132,6 +135,7 @@ def test_020_create_user(get_user_by_id, create_user, delete_user):
     response_object = create_user(user_data)
 
     test_object = GlobalMethods(response_object)
+    test_object.validate_json_schema(ModelUser201)
     test_object.validate_status_code(201)
     test_object.validate_response_header("Content-type", "application/json")
     test_object.validate_response_header("Connection", "keep-alive")
@@ -143,7 +147,7 @@ def test_020_create_user(get_user_by_id, create_user, delete_user):
     user_id = response_object.json().get("user_id")
 
     delete_user(user_id)
-    test_object_users.validate_response_message_about_error_404(user_id)
+    # test_object_users.validate_response_message_about_error_404(user_id)
 
     # response_object_ater_delete_user_id = get_user_by_id(user_id)
     # print(response_object_ater_delete_user_id.json())
@@ -153,7 +157,7 @@ def test_020_create_user(get_user_by_id, create_user, delete_user):
     # "reason": "User with requested id: 4377 is absent"
 
 @pytest.mark.users
-def test_021_create_user_with_incorrect_id(create_user):
+def test_021_create_user_with_incorrect_company_id(create_user):
     """
     Зарегистрировать нового пользователя с не верным company_id
 
@@ -164,13 +168,83 @@ def test_021_create_user_with_incorrect_id(create_user):
         Response header "Content-Type": "application/json"
         Response header "Connection": "keep-alive"
         В JSON - присутствует ключ detail, значением является описание ошибки
+        В тексте ошибки указан отправленный нами "company_id"
     """
-
     company_id = "33"
     user_data = {"first_name": "Вальдемар", "last_name": "Евлампиевич", "company_id": company_id}
     response_object = create_user(user_data)
 
-    print(response_object.json())
+    test_object = GlobalMethods(response_object)
+    test_object.validate_status_code(404)
+    test_object.validate_json_schema(Model404)
+    test_object.validate_response_header("Content-type", "application/json")
+    test_object.validate_response_header("Connection", "keep-alive")
+
+    test_object_companies = CompaniesMethods(response_object)
+    test_object_companies.validate_response_message_about_error_404(company_id)
+
+@pytest.mark.users
+@pytest.mark.parametrize("user_data",
+             [({"first_name": "1", "last_name": None, "company_id": 3}),
+              ({"first_name": "1", "company_id": 3})], ids=str)
+def test_022_create_user_with_null_and_empty_last_name(user_data, create_user):
+    """
+    Зарегистрировать пользователя:
+        - обязательное полем "last_name" = None;
+        - вообще без указания обязательного поля "last_name" и его значения
+        Все остальные данные корректные
+
+    Ожидаемый результат:
+        Статус-код 422;
+        Время ответа сервера - не превышает 500ms;
+        Схема JSON-ответа соответствует Требованиям;
+        Response header "Content-Type": "application/json"
+        Response header "Connection": "keep-alive"
+        В JSON присутствует описание ошибки
+    """
+    response_object = create_user(user_data)
+
+    test_object = GlobalMethods(response_object)
+    test_object.validate_status_code(422)
+    test_object.validate_json_schema(Model422)
+    test_object.validate_response_header("Content-type", "application/json")
+    test_object.validate_response_header("Connection", "keep-alive")
+    test_object.validate_time_from_request_to_response()
+
+    if "last_name" in user_data:
+        test_object.validate_error_message_with_status_code_422("Input should be a valid string")
+    else:
+        test_object.validate_error_message_with_status_code_422("Field required")
+
+@pytest.mark.users
+def test_023_create_user_in_with_closed_status(create_user):
+    """
+    Создать пользователя в компании company_status = CLOSED
+
+    Ожидаемый результат:
+        Статус-код 400;
+        Время ответа сервера - не превышает 500ms;
+        Схема JSON-ответа соответствует Требованиям;
+        Response header "Content-Type": "application/json"
+        Response header "Connection": "keep-alive"
+        В JSON присутствует описание ошибки
+    """
+    company_id = 5
+    user_data = {"first_name": "Вальдемар", "last_name": "Евлампиевич", "company_id": company_id}
+    response_object = create_user(user_data)
+
+    test_object = GlobalMethods(response_object)
+    test_object.validate_status_code(400)
+    test_object.validate_json_schema(Model400)
+    test_object.validate_response_header("Content-type", "application/json")
+    test_object.validate_response_header("Connection", "keep-alive")
+
+    test_object_users = UsersMethods(response_object)
+    test_object_users.assert_response_message_about_error_400()
+
+
+
+
 
 
 

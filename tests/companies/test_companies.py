@@ -83,7 +83,7 @@ def test_003_get_companies_with_limit_and_offset():
     test_object_companies.offset_validation(offset_value)
 
 @pytest.mark.companies
-@pytest.mark.parametrize("company_status", [("ACTIVE"), ("CLOSED"), ("BANKRUPT")])
+@pytest.mark.parametrize("company_status", [("ACTIVE"), ("CLOSED"), ("BANKRUPT")], ids=str)
 def test_004_get_companies_with_different_query_statuses(company_status):
     """
     Получить список компаний с разными "company_status" = "ACTIVE", "CLOSED" или "BANKRUPT"
@@ -162,6 +162,7 @@ def test_006_get_companies_with_incorrect_int_query_limit():
 
     # если бы это была не учебная база, то можно было бы провалидировать и сообщение об ошибке, но мы не знаем этого
     # сообщения, потому и метод создать для этого случая не можем
+    test_object.validate_error_message_with_status_code_422(query_parameter, value)
 
 @pytest.mark.companies
 def test_007_get_companies_with_incorrect_str_query_limit():

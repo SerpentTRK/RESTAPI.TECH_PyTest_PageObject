@@ -8,7 +8,7 @@ from src.configuration import baseUrl_users, first_name_value, last_name_value, 
 @pytest.fixture
 def get_users():
     """
-    Выполняем GET запрос по URI и необходимыми параметрами, если они требуются, для получения всех пользователей
+    Выполняем GET запрос по URI и необходимыми параметрами, если они требуются, для получения выборки пользователей
     """
     def _wrapped(parameters={}):
         response_object = requests.get(baseUrl_users, params=parameters)

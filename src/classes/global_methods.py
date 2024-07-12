@@ -59,24 +59,31 @@ class GlobalMethods:
         # assert max_time_to_response > response_time, self
         check.greater(max_time_to_response_in_seconds, response_time, self)
 
-    def validate_error_message_with_status_code_422(self, query_parameter, value):
+    def validate_error_message_with_status_code_422(self, query_parameter=None, value=None, msg=None):
         """
         Валидация сообщений об ошибках для разных query-параметров
         """
-        if query_parameter == "status":
-            error_message = "Input should be 'ACTIVE', 'CLOSED' or 'BANKRUPT'"
-        if query_parameter in ["limit", "offset"]:
-            error_message = "Input should be a valid integer, unable to parse string as an integer"
-
         for elem in self.response.json().get("detail"):
-            # assert elem["msg"] == error_message, \
-            #     f"Ошибка! Ожидаемый текст ошибки: '{error_message}' не совпадает с полученным: '{elem['msg']}'"
-            # assert elem["input"] == value, \
-            #     f"Ошибка! Отправленное значение: {value} не совпадает с полученным: {elem['input']}"
-            check.equal(elem["msg"], error_message,
-                    msg=f"Ошибка! Ожидаемый текст ошибки: '{error_message}' не совпадает с полученным: '{elem['msg']}'")
-            check.equal(elem["input"], value,
-                    msg=f"Ошибка! Отправленное значение: {value} не совпадает с полученным: {elem['input']}")
+            if query_parameter == "status":
+                error_message = "Input should be 'ACTIVE', 'CLOSED' or 'BANKRUPT'"
+            if query_parameter in ["limit", "offset"]:
+                error_message = "Input should be a valid integer, unable to parse string as an integer"
+
+                # assert elem["msg"] == error_message, \
+                #     f"Ошибка! Ожидаемый текст ошибки: '{error_message}' не совпадает с полученным: '{elem['msg']}'"
+                # assert elem["input"] == value, \
+                #     f"Ошибка! Отправленное значение: {value} не совпадает с полученным: {elem['input']}"
+                check.equal(elem["msg"], error_message,
+                        msg=f"Ошибка! Ожидаемый текст ошибки: '{error_message}' не совпадает с полученным: '{elem['msg']}'")
+                check.equal(elem["input"], value,
+                        msg=f"Ошибка! Отправленное значение: {value} не совпадает с полученным: {elem['input']}")
+
+            # это для случаев, когда нет query-параметров, а данные передаются через request_body
+            if msg:
+                # assert elem["msg"] == msg, \
+                #     f"Ошибка! Ожидаемый текст ошибки: '{error_message}' не совпадает с полученным: '{elem['msg']}'"
+                check.equal(elem["msg"], msg,
+                            msg=f"Ошибка! Ожидаемый текст ошибки: '{msg}' не совпадает с полученным: '{elem['msg']}'")
 
 
 
