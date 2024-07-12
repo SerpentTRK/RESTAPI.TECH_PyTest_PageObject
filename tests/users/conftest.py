@@ -2,7 +2,7 @@ import requests
 import pytest
 import json
 
-from src.configuration import baseUrl_users, first_name_value, last_name_value, company_id
+from src.configuration import baseUrl_users
 
 
 @pytest.fixture

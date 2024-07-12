@@ -46,11 +46,11 @@ class UsersMethods:
                         f"{expected_user_id}, а по факту на первой строчке стоит 'user_id': {received_user_id}")
 
 
-    def user_validation(self, first_name, last_name, company_id):
+    def user_validation(self, user_data):
         """
         Проверка на соответствие того, что пользователь в БД именно такой, каким его создали
         """
-        test_data = {"first_name": first_name, "last_name": last_name, "company_id": company_id}
+        test_data = user_data
         response_data = self.response.json()
 
         for key in response_data.keys():

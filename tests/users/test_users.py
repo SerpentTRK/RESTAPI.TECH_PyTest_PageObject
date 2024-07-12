@@ -4,12 +4,13 @@ import requests
 import json
 
 from src.classes.companies_methods import CompaniesMethods
-from src.configuration import baseUrl_users, first_name_value, last_name_value, company_id
+from src.configuration import user_data
 
 from src.classes.global_methods import GlobalMethods
 from src.classes.users_methods import UsersMethods
 from src.pydantic_shemas.model_https_400 import Model400
 
+from src.pydantic_shemas.model_users_200 import ModelUsers200
 from src.pydantic_shemas.model_user_200 import ModelUser200
 from src.pydantic_shemas.model_422 import Model422
 from src.pydantic_shemas.model_404 import Model404
@@ -35,7 +36,7 @@ def test_016_get_users_with_limit_and_offset(get_users):
 
     test_object = GlobalMethods(response_object)
     test_object.basic_checks_collection()
-    test_object.validate_json_schema(ModelUser200)
+    test_object.validate_json_schema(ModelUsers200)
 
     test_object_users = UsersMethods(response_object)
     test_object_users.limit_validation(limit_value)
@@ -119,7 +120,7 @@ def test_019_get_users_list_by_http():
     assert response_object.headers["Location"] == "https://restapi.tech/api/users"
 
 @pytest.mark.users
-def test_020_create_user(get_user_by_id, create_user, delete_user):
+def test_020_create_user(create_user, delete_user):
     """
     Зарегистрировать нового пользователя
 
@@ -131,7 +132,6 @@ def test_020_create_user(get_user_by_id, create_user, delete_user):
         Response header "Connection": "keep-alive"
         Новая запись JSON ответа соответствует тому, что мы отправляли при регистрации + содержит Id созданного юзера.
     """
-    user_data = {"first_name": "Вальдемар", "last_name": "Евлампиевич", "company_id": 3}
     response_object = create_user(user_data)
 
     test_object = GlobalMethods(response_object)
@@ -141,12 +141,12 @@ def test_020_create_user(get_user_by_id, create_user, delete_user):
     test_object.validate_response_header("Connection", "keep-alive")
 
     test_object_users = UsersMethods(response_object)
-    test_object_users.user_validation(first_name_value, last_name_value, company_id)
+    test_object_users.user_validation(user_data)
 
     # чистим за собой БД, чтобы не засорять её тестовыми данными
     user_id = response_object.json().get("user_id")
-
     delete_user(user_id)
+
     # test_object_users.validate_response_message_about_error_404(user_id)
 
     # response_object_ater_delete_user_id = get_user_by_id(user_id)
@@ -242,7 +242,36 @@ def test_023_create_user_in_with_closed_status(create_user):
     test_object_users = UsersMethods(response_object)
     test_object_users.assert_response_message_about_error_400()
 
+@pytest.mark.users
+def test_024(create_user, get_user_by_id, delete_user):
+    """
+    Получить данные пользователя по его user_id
 
+    Ожидаемый результат:
+        Статус-код 200;
+        Время ответа сервера - не превышает 500ms;
+        Схема JSON-ответа соответствует Требованиям;
+        Response header "Content-Type": "application/json"
+        Response header "Connection": "keep-alive"
+        Запись JSON ответа соответствует тому, что мы отправляли при регистрации
+    """
+    #Регистриуем тестового пользователя, т.к. пока некого запрашивать по user_id
+    # user_data = {"first_name": "Вальдемар", "last_name": "Евлампиевич", "company_id": 3}
+    response_object_create_user = create_user(user_data)
+    user_id = response_object_create_user.json().get("user_id")
+
+    #Переходим к самому тесту
+    response_object = get_user_by_id(user_id)
+
+    test_object = GlobalMethods(response_object)
+    test_object.basic_checks_collection()
+    test_object.validate_json_schema(ModelUser200)
+
+    test_object_users = UsersMethods(response_object)
+    test_object_users.user_validation(user_data)
+
+    #чистим за собой тестовые данные
+    delete_user(user_id)
 
 
 
