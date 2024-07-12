@@ -47,6 +47,18 @@ def create_user():
         return response_object
     return _wrapped
 
+@pytest.fixture
+def update_user():
+    """
+    Выполняем PUT запрос для редактирования пользователя
+    """
+    def _wrapped(update_data, user_id):
+        payload = json.dumps(update_data)
+        headers = {'Content-Type': 'application/json'}
+        response_object = requests.put(baseUrl_users +"/" + str(user_id), headers=headers, data=payload)
+
+        return response_object
+    return _wrapped
 
 
 # @pytest.fixture

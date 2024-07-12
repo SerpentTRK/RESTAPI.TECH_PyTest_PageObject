@@ -55,10 +55,11 @@ class UsersMethods:
 
         for key in response_data.keys():
             if key in test_data:
-        #         assert test_data[key] == response_data[key], \
-        # f"Ошибка! Переданное значение '{test_data[key]}' не совпадает с зарегистрированным '{response_data[key]}'"
                 check.equal(test_data[key], response_data[key],
-        msg=f"Ошибка! Переданное значение '{test_data[key]}' не совпадает с зарегистрированным '{response_data[key]}'")
+    msg=f"Ошибка! Переданное значение '{str(test_data[key])}' не совпадает с зарегистрированным '{str(response_data[key])}'")
+
+                # assert test_data[key] == str(response_data[key]), \
+                # f"Ошибка! Переданное значение '{test_data[key]}' не совпадает с зарегистрированным '{response_data[key]}'"
 
     def validate_response_message_about_error_404(self, user_id):
         """
@@ -69,9 +70,6 @@ class UsersMethods:
         #     f"Ошибка! В запросе был company_id: '{user_id}', а по факту получили {self.response.url}"
         check.equal(error_message, f"User with requested id: {user_id} is absent",
             msg=f"Ошибка! В запросе был company_id: '{user_id}', а по факту получили {self.response.url}")
-
-
-
 
     def assert_response_message_about_error_400(self):
         """

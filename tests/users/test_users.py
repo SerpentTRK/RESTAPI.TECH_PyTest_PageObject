@@ -256,7 +256,6 @@ def test_024_get_user_by_id(create_user, get_user_by_id, delete_user):
         Запись JSON ответа соответствует тому, что мы отправляли при регистрации
     """
     #Регистриуем тестового пользователя, т.к. пока некого запрашивать по user_id
-    # user_data = {"first_name": "Вальдемар", "last_name": "Евлампиевич", "company_id": 3}
     response_object_create_user = create_user(user_data)
     user_id = response_object_create_user.json().get("user_id")
 
@@ -274,7 +273,7 @@ def test_024_get_user_by_id(create_user, get_user_by_id, delete_user):
     delete_user(user_id)
 
 @pytest.mark.users
-def test_get_created_user_by_incorrect_id_025(get_user_by_id):
+def test_025_get_created_user_by_incorrect_id(get_user_by_id):
     """
     Получить данные пользователя по не корректному user_id
 
@@ -298,6 +297,38 @@ def test_get_created_user_by_incorrect_id_025(get_user_by_id):
 
     test_object_users = UsersMethods(response_object)
     test_object_users.validate_response_message_about_error_404(user_id)
+
+@pytest.mark.users
+def test_026_update_user(create_user, update_user, delete_user):
+    """
+    Внести изменения в данные существующего пользователя
+
+    Ожидаемый результат:
+        Статус-код 200;
+        Время ответа сервера - не превышает 500ms;
+        Схема JSON-ответа соответствует Требованиям;
+        Response header "Content-Type": "application/json"
+        Response header "Connection": "keep-alive"
+        Новая запись JSON ответа соответствует тому, что мы отправляли при редактировании пользователя
+    """
+    #Регистриуем тестового пользователя, т.к. пока некого запрашивать по user_id
+    response_object_create_user = create_user(user_data)
+    user_id = response_object_create_user.json().get("user_id")
+
+    # Переходим к самому тесту
+    update_data = {"first_name": "Гена", "last_name": "Пипеткин", "company_id": "3"}
+    response_object = update_user(update_data, user_id)
+
+    test_object = GlobalMethods(response_object)
+    test_object.basic_checks_collection()
+    test_object.validate_json_schema(ModelUser200)
+
+    test_object_users = UsersMethods(response_object)
+    test_object_users.user_validation(update_data)
+
+    # чистим за собой тестовые данные
+    delete_user(user_id)
+
 
 
 @pytest.mark.skip("Это черновик")
