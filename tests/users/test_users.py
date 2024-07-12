@@ -1,6 +1,7 @@
 
 import pytest
 import requests
+import json
 
 from src.configuration import baseUrl_users, first_name_value, last_name_value, company_id
 
@@ -12,7 +13,7 @@ from src.pydantic_shemas.model_422 import Model422
 
 
 @pytest.mark.users
-def test_016_get_users_with_limit_and_offset():
+def test_016_get_users_with_limit_and_offset(get_users):
     """
     Получить список пользователей с query-параметрами limit = 10 и offset = 5
 
@@ -26,7 +27,7 @@ def test_016_get_users_with_limit_and_offset():
     """
     limit_value, offset_value = 10, 5
     parameters = {"limit": limit_value, "offset": offset_value, "status": "ACTIVE"}
-    response_object = requests.get(baseUrl_users, params=parameters)
+    response_object = get_users(parameters)
 
     test_object = GlobalMethods(response_object)
     test_object.basic_checks_collection()
@@ -38,7 +39,7 @@ def test_016_get_users_with_limit_and_offset():
 
 @pytest.mark.skip("{id записи об ошибке} Вместо 422 получаем статус-код 200. Skip-аем пока не починят")
 @pytest.mark.users
-def test_017_get_users_with_incorrect_limit():
+def test_017_get_users_with_incorrect_limit(get_users):
     """
     Получить список пользователей с отрицательным query-параметрам limit = -1
 
@@ -54,7 +55,7 @@ def test_017_get_users_with_incorrect_limit():
     """
     limit_value = -1
     parameters = {"limit": limit_value}
-    response_object = requests.get(baseUrl_users, params=parameters)
+    response_object = get_users(parameters)
 
     test_object = GlobalMethods(response_object)
     test_object.validate_status_code(422)
@@ -64,7 +65,7 @@ def test_017_get_users_with_incorrect_limit():
     test_object.validate_time_from_request_to_response()
 
 @pytest.mark.users
-def test_018_get_users_with_incorrect_str_limit_and_offset():
+def test_018_get_users_with_incorrect_str_limit_and_offset(get_users):
     """
     Получить список пользователей с query-параметрами limit = abc и offset = abc
 
@@ -81,7 +82,7 @@ def test_018_get_users_with_incorrect_str_limit_and_offset():
 
     limit_value, offset_value = "abc", "abc"
     parameters = {"limit": limit_value, "offset": offset_value}
-    response_object = requests.get(baseUrl_users, params=parameters)
+    response_object = get_users(parameters)
 
     test_object = GlobalMethods(response_object)
     test_object.validate_status_code(422)
@@ -115,7 +116,7 @@ def test_019_get_users_list_by_http():
     assert response_object.headers["Location"] == "https://restapi.tech/api/users"
 
 @pytest.mark.users
-def test_020_create_user(create_and_dalete_user):
+def test_020_create_user(get_user_by_id, create_user, delete_user):
     """
     Зарегистрировать нового пользователя
 
@@ -125,17 +126,51 @@ def test_020_create_user(create_and_dalete_user):
         Схема JSON-ответа соответствует Требованиям;
         Response header "Content-Type": "application/json"
         Response header "Connection": "keep-alive"
-        Новая запись JSON ответа соответствует тому, что мы отправляли при регистрации + содержит Id созданного юзера
+        Новая запись JSON ответа соответствует тому, что мы отправляли при регистрации + содержит Id созданного юзера.
     """
-    # first_name_value, last_name_value, company_id
-    test_object = GlobalMethods(create_and_dalete_user)
+    user_data = {"first_name": "Вальдемар", "last_name": "Евлампиевич", "company_id": 3}
+    response_object = create_user(user_data)
+
+    test_object = GlobalMethods(response_object)
     test_object.validate_status_code(201)
     test_object.validate_response_header("Content-type", "application/json")
     test_object.validate_response_header("Connection", "keep-alive")
 
-    test_object_users = UsersMethods(create_and_dalete_user)
+    test_object_users = UsersMethods(response_object)
     test_object_users.user_validation(first_name_value, last_name_value, company_id)
 
+    # чистим за собой БД, чтобы не засорять её тестовыми данными
+    user_id = response_object.json().get("user_id")
+
+    delete_user(user_id)
+    test_object_users.validate_response_message_about_error_404(user_id)
+
+    # response_object_ater_delete_user_id = get_user_by_id(user_id)
+    # print(response_object_ater_delete_user_id.json())
+
+    # надо сделлать отдельный метод на удаление и  метод на получение юзера но левому id
+    # надо провалидировать удаление пользователя
+    # "reason": "User with requested id: 4377 is absent"
+
+@pytest.mark.users
+def test_021_create_user_with_incorrect_id(create_user):
+    """
+    Зарегистрировать нового пользователя с не верным company_id
+
+    Ожидаемый результат:
+        Статус-код 404;
+        Время ответа сервера - не превышает 500ms;
+        Схема JSON-ответа соответствует Требованиям;
+        Response header "Content-Type": "application/json"
+        Response header "Connection": "keep-alive"
+        В JSON - присутствует ключ detail, значением является описание ошибки
+    """
+
+    company_id = "33"
+    user_data = {"first_name": "Вальдемар", "last_name": "Евлампиевич", "company_id": company_id}
+    response_object = create_user(user_data)
+
+    print(response_object.json())
 
 
 
