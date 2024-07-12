@@ -62,20 +62,16 @@ class UsersMethods:
 
     def validate_response_message_about_error_404(self, user_id):
         """
-        Валидация 404 ошибки. В нем должен быть указан тот user_id, что и в URI
-        Валидая удаления дает 404 ошибку
+        Валидация 404 ошибки. В тексте ошибки должен быть указан тот же "user_id", что и request-e
         """
-        print(self.requests.url)
-        for key, value in self.response.json().get("detail").items():
-            print(key, value)
+        error_message = self.response.json().get("detail")["reason"]
+        # assert error_message == f"User with requested id: {user_id} is absent", \
+        #     f"Ошибка! В запросе был company_id: '{user_id}', а по факту получили {self.response.url}"
+        check.equal(error_message, f"User with requested id: {user_id} is absent",
+            msg=f"Ошибка! В запросе был company_id: '{user_id}', а по факту получили {self.response.url}")
 
-        # assert error_message == f"Company with requested id: {user_id} is absent", \
-        #     f"Ошибка! В запросе был company_id: '{company_id}', " \
-        #     f"а по факту получили {''.join(c for c in value if c.isdigit())}"
 
-        # check.equal(error_message, f"User with requested id: {user_id} is absent",
-        #             msg=f"Ошибка! В запросе был company_id: '{user_id}', "
-        #                 f"а по факту получили {self.response.url}")
+
 
     def assert_response_message_about_error_400(self):
         """

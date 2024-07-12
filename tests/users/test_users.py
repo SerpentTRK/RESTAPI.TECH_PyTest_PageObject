@@ -243,7 +243,7 @@ def test_023_create_user_in_with_closed_status(create_user):
     test_object_users.assert_response_message_about_error_400()
 
 @pytest.mark.users
-def test_024(create_user, get_user_by_id, delete_user):
+def test_024_get_user_by_id(create_user, get_user_by_id, delete_user):
     """
     Получить данные пользователя по его user_id
 
@@ -273,8 +273,31 @@ def test_024(create_user, get_user_by_id, delete_user):
     #чистим за собой тестовые данные
     delete_user(user_id)
 
+@pytest.mark.users
+def test_get_created_user_by_incorrect_id_025(get_user_by_id):
+    """
+    Получить данные пользователя по не корректному user_id
 
+    Ожидаемый результат:
+        Статус-код 404;
+        Время ответа сервера - не превышает 500ms;
+        Схема JSON-ответа соответствует Требованиям;
+        Response header "Content-Type": "application/json"
+        Response header "Connection": "keep-alive"
+        В JSON - присутствует ключ detail, значением является описание ошибки
+        В тексте ошибки указан отправленный нами "user_id"
+    """
+    user_id = 1000000
+    response_object = get_user_by_id(user_id)
 
+    test_object = GlobalMethods(response_object)
+    test_object.validate_status_code(404)
+    test_object.validate_json_schema(Model404)
+    test_object.validate_response_header("Content-type", "application/json")
+    test_object.validate_response_header("Connection", "keep-alive")
+
+    test_object_users = UsersMethods(response_object)
+    test_object_users.validate_response_message_about_error_404(user_id)
 
 
 @pytest.mark.skip("Это черновик")
