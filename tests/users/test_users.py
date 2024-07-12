@@ -316,7 +316,7 @@ def test_026_update_user(create_user, update_user, delete_user):
     user_id = response_object_create_user.json().get("user_id")
 
     # Переходим к самому тесту
-    update_data = {"first_name": "Гена", "last_name": "Пипеткин", "company_id": "3"}
+    update_data = {"first_name": "Гена", "last_name": "Пипеткин", "company_id": 3}
     response_object = update_user(update_data, user_id)
 
     test_object = GlobalMethods(response_object)

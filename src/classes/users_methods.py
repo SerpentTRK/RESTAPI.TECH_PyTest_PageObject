@@ -55,10 +55,9 @@ class UsersMethods:
 
         for key in response_data.keys():
             if key in test_data:
-                check.equal(test_data[key], response_data[key],
-    msg=f"Ошибка! Переданное значение '{str(test_data[key])}' не совпадает с зарегистрированным '{str(response_data[key])}'")
-
-                # assert test_data[key] == str(response_data[key]), \
+                check.equal(test_data[key], response_data[key], msg=f"Ошибка! Переданное значение "
+                f"'{str(test_data[key])}' не совпадает с зарегистрированным '{str(response_data[key])}'")
+                # assert test_data[key] == response_data[key], \
                 # f"Ошибка! Переданное значение '{test_data[key]}' не совпадает с зарегистрированным '{response_data[key]}'"
 
     def validate_response_message_about_error_404(self, user_id):
