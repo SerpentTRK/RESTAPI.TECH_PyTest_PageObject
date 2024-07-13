@@ -294,7 +294,6 @@ def test_026_update_user(create_and_delete_user, update_user):
         Response header "Connection": "keep-alive"
         Новая запись JSON ответа соответствует тому, что мы отправляли при редактировании пользователя
     """
-    #Регистриуем тестового пользователя, т.к. пока некого запрашивать по user_id
     response_object_create_user = create_and_delete_user(user_data)
     user_id = response_object_create_user.json().get("user_id")
 
@@ -310,7 +309,7 @@ def test_026_update_user(create_and_delete_user, update_user):
     test_object_users.user_validation(update_data)
 
 @pytest.mark.users
-def test_027_pdate_user_with_incorrect_user_id(update_user):
+def test_027_update_user_with_incorrect_user_id(update_user):
     """
     Отредактировать не существующего пользователя (не существующий user_id)
 
@@ -335,6 +334,35 @@ def test_027_pdate_user_with_incorrect_user_id(update_user):
 
     test_object_users = UsersMethods(response_object)
     test_object_users.validate_response_message_about_error_404(user_id)
+
+@pytest.mark.users
+def test_028_update_user_with_incorrect_company_id(create_and_delete_user, update_user):
+    """
+    Отредактировать пользователя не существующей компании (не существующий company_id)
+
+    Ожидаемый результат:
+        Статус-код 404;
+        Время ответа сервера - не превышает 500ms;
+        Схема JSON-ответа соответствует Требованиям;
+        Response header "Content-Type": "application/json"
+        Response header "Connection": "keep-alive"
+        В JSON присутствует описание ошибки
+    """
+    response_object_create_user = create_and_delete_user(user_data)
+    user_id = response_object_create_user.json().get("user_id")
+
+    company_id = "33"
+    update_data = {"first_name": "Маня", "last_name": "Пена", "company_id": company_id}
+    response_object = update_user(update_data, user_id)
+
+    test_object = GlobalMethods(response_object)
+    test_object.validate_status_code(404)
+    test_object.validate_json_schema(Model404)
+    test_object.validate_response_header("Content-type", "application/json")
+    test_object.validate_response_header("Connection", "keep-alive")
+
+    test_object_companies = CompaniesMethods(response_object)
+    test_object_companies.validate_response_message_about_error_404(company_id)
 
 
 
