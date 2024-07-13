@@ -2,8 +2,19 @@ import requests
 import pytest
 import json
 
+from src.configuration import baseUrl_companies
 
-# я не стал это использовать, т.к. мне кажется это не удобным
-# @pytest.fixture
-# def response_object(endpoint):
-#     return requests.get(url="https://restapi.tech" + endpoint)
+
+
+@pytest.fixture
+def get_company():
+    def _wrapped(parameters={}, headers={}, company_id=None):
+
+        if not company_id:
+            url = baseUrl_companies
+        else:
+            url = baseUrl_companies + company_id
+
+        response_object = requests.get(url, params=parameters, headers=headers)
+        return response_object
+    return _wrapped

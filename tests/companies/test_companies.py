@@ -2,7 +2,7 @@
 import pytest
 import requests
 
-from src.configuration import baseUrl_companies
+from src.configuration import baseUrl_companies, baseUrl_issues_companies
 from src.classes.global_methods import GlobalMethods
 from src.classes.companies_methods import CompaniesMethods
 
@@ -14,7 +14,7 @@ from src.pydantic_shemas.model_404 import Model404
 
 
 @pytest.mark.companies
-def test_001_get_companies_default_request():
+def test_001_get_companies_default_request(get_company):
     """
     Получить список компаний.
 
@@ -26,7 +26,7 @@ def test_001_get_companies_default_request():
         Response header "Connection": "keep-alive"
         В JSON 3 компании, company_status = ACTIVE
     """
-    response_object = requests.get(url=baseUrl_companies)
+    response_object = get_company()
 
     test_object = GlobalMethods(response_object)
     test_object.basic_checks_collection()
@@ -58,7 +58,7 @@ def test_002_get_companies_without_ssl():
     assert response_object.headers["Location"] == "https://restapi.tech/api/companies"
 
 @pytest.mark.companies
-def test_003_get_companies_with_limit_and_offset():
+def test_003_get_companies_with_limit_and_offset(get_company):
     """
     Получить список компаний с указанием limit=5 и offset=2
 
@@ -72,7 +72,7 @@ def test_003_get_companies_with_limit_and_offset():
     """
     limit_value, offset_value = 5, 2
     parameters = {"limit": limit_value, "offset": offset_value}
-    response_object = requests.get(url=baseUrl_companies, params=parameters)
+    response_object = get_company(parameters=parameters)
 
     test_object = GlobalMethods(response_object)
     test_object.basic_checks_collection()
@@ -84,7 +84,7 @@ def test_003_get_companies_with_limit_and_offset():
 
 @pytest.mark.companies
 @pytest.mark.parametrize("company_status", [("ACTIVE"), ("CLOSED"), ("BANKRUPT")], ids=str)
-def test_004_get_companies_with_different_query_statuses(company_status):
+def test_004_get_companies_with_different_query_statuses(company_status, get_company):
     """
     Получить список компаний с разными "company_status" = "ACTIVE", "CLOSED" или "BANKRUPT"
 
@@ -98,7 +98,7 @@ def test_004_get_companies_with_different_query_statuses(company_status):
     """
     query_parameter = "status"
     parameters = {query_parameter: company_status}
-    response_object = requests.get(url=baseUrl_companies, params=parameters)
+    response_object = get_company(parameters=parameters)
 
     test_object = GlobalMethods(response_object)
     test_object.basic_checks_collection()
@@ -108,7 +108,7 @@ def test_004_get_companies_with_different_query_statuses(company_status):
     test_object_companies.validate_companies_statuses(company_status)
 
 @pytest.mark.companies
-def test_005_get_compani_with_incorrect_status_ABCDE():
+def test_005_get_compani_with_incorrect_status_ABCDE(get_company):
     """
     Получить список компаний с указанием не сущестующего "company_status": "ABCDE"
 
@@ -122,7 +122,7 @@ def test_005_get_compani_with_incorrect_status_ABCDE():
     """
     query_parameter, value = "status", "ABCDE"
     parameters = {query_parameter: value}
-    response_object = requests.get(url=baseUrl_companies, params=parameters)
+    response_object = get_company(parameters=parameters)
 
     test_object = GlobalMethods(response_object)
     test_object.validate_status_code(422)
@@ -135,7 +135,7 @@ def test_005_get_compani_with_incorrect_status_ABCDE():
 
 @pytest.mark.skip("{id записи об ошибке} Вместо 422 получаем статус-код 200. Skip-аем пока не починят")
 @pytest.mark.companies
-def test_006_get_companies_with_incorrect_int_query_limit():
+def test_006_get_companies_with_incorrect_int_query_limit(get_company):
     """
     Получить список компаний с указанием отрицательного лимита limit = -1
 
@@ -151,7 +151,7 @@ def test_006_get_companies_with_incorrect_int_query_limit():
     """
     query_parameter, value = "limit", -1
     parameters = {query_parameter: value}
-    response_object = requests.get(url=baseUrl_companies, params=parameters)
+    response_object = get_company(parameters=parameters)
 
     test_object = GlobalMethods(response_object)
     test_object.validate_status_code(422)
@@ -165,7 +165,7 @@ def test_006_get_companies_with_incorrect_int_query_limit():
     test_object.validate_error_message_with_status_code_422(query_parameter, value)
 
 @pytest.mark.companies
-def test_007_get_companies_with_incorrect_str_query_limit():
+def test_007_get_companies_with_incorrect_str_query_limit(get_company):
     """
     Получить список компаний с указанием строчного значения limit = "abc"
 
@@ -179,7 +179,7 @@ def test_007_get_companies_with_incorrect_str_query_limit():
     """
     query_parameter, value = "limit", "abc"
     parameters = {query_parameter: value}
-    response_object = requests.get(url=baseUrl_companies, params=parameters)
+    response_object = get_company(parameters=parameters)
 
     test_object = GlobalMethods(response_object)
     test_object.validate_status_code(422)
@@ -191,7 +191,7 @@ def test_007_get_companies_with_incorrect_str_query_limit():
     test_object.validate_error_message_with_status_code_422(query_parameter, value)
 
 @pytest.mark.companies
-def test_008_companies_with_incorrect_int_query_offset():
+def test_008_companies_with_incorrect_int_query_offset(get_company):
     """
     Получить список компаний с указанием отрицательного значения offset = -1
 
@@ -206,7 +206,7 @@ def test_008_companies_with_incorrect_int_query_offset():
     """
     query_parameter, value = "offset", -1
     parameters = {query_parameter: value}
-    response_object = requests.get(url=baseUrl_companies, params=parameters)
+    response_object = get_company(parameters=parameters)
 
     test_object = GlobalMethods(response_object)
     test_object.basic_checks_collection()
@@ -217,7 +217,7 @@ def test_008_companies_with_incorrect_int_query_offset():
     test_object_companies.validate_companies_statuses("ACTIVE")
 
 @pytest.mark.companies
-def test_009_companies_with_incorrect_str_query_offset():
+def test_009_companies_with_incorrect_str_query_offset(get_company):
     """
     Получить список компаний с указанием строчного значения offset = "abc"
 
@@ -231,7 +231,7 @@ def test_009_companies_with_incorrect_str_query_offset():
     """
     query_parameter, value = "offset", "abc"
     parameters = {query_parameter: value}
-    response_object = requests.get(url=baseUrl_companies, params=parameters)
+    response_object = get_company(parameters=parameters)
 
     test_object = GlobalMethods(response_object)
     test_object.validate_status_code(422)
@@ -243,7 +243,7 @@ def test_009_companies_with_incorrect_str_query_offset():
     test_object.validate_error_message_with_status_code_422(query_parameter, value)
 
 @pytest.mark.companies
-def test_010_get_company_by_id():
+def test_010_get_company_by_id(get_company):
     """
     Получить информацию о компании по существующему Id=1 в эндпоинте URI
 
@@ -256,7 +256,7 @@ def test_010_get_company_by_id():
         В JSON - company_id совпадает с id URI и первый в списке поддерживаемых языков EN;
     """
     company_id = "/1"
-    response_object = requests.get(url=baseUrl_companies + company_id)
+    response_object = get_company(company_id=company_id)
 
     test_object = GlobalMethods(response_object)
     test_object.basic_checks_collection()
@@ -267,7 +267,7 @@ def test_010_get_company_by_id():
     test_object_companies.validate_first_language()
 
 @pytest.mark.companies
-def test_011_get_company_by_incorrect_id():
+def test_011_get_company_by_incorrect_id(get_company):
     """
     Получить информацию о компании по не существующему Id=8 в эндпоинте URI
 
@@ -281,7 +281,7 @@ def test_011_get_company_by_incorrect_id():
         сообщении совпадает с company_id из реквеста
     """
     company_id = "/8"
-    response_object = requests.get(url=baseUrl_companies + company_id)
+    response_object = get_company(company_id=company_id)
 
     test_object = GlobalMethods(response_object)
     test_object.validate_json_schema(Model404)
@@ -293,7 +293,7 @@ def test_011_get_company_by_incorrect_id():
     test_object_companies = CompaniesMethods(response_object)
     test_object_companies.validate_response_message_about_error_404(company_id)
 
-def test_012_get_company_by_id_and_supported_language():
+def test_012_get_company_by_id_and_supported_language(get_company):
     """
     Получить информацию о компании по существующему id=1 в эндпоинте URI, с выбором поддерживаемого языка RU
 
@@ -309,7 +309,7 @@ def test_012_get_company_by_id_and_supported_language():
     company_id = "/1"
     query_parameter, value = "Accept-Language", "RU"
     headers = {query_parameter: value}
-    response_object = requests.get(url=baseUrl_companies + company_id, headers=headers)
+    response_object = get_company(headers=headers, company_id=company_id)
 
     test_object = GlobalMethods(response_object)
     test_object.basic_checks_collection()
@@ -319,7 +319,7 @@ def test_012_get_company_by_id_and_supported_language():
     test_object_companies.validate_uri_in_request_and_response(baseUrl_companies + company_id)
     test_object_companies.validate_language(value)
 
-def test_013_get_company_by_id_and_unsupported_language():
+def test_013_get_company_by_id_and_unsupported_language(get_company):
     """
     Получить информацию о компании по существующему id=1 в эндпоинте URI, с выбором не поддерживаемого языка KZ
 
@@ -336,7 +336,7 @@ def test_013_get_company_by_id_and_unsupported_language():
     company_id = "/1"
     query_parameter, value = "Accept-Language", "KZ"
     headers = {query_parameter: value}
-    response_object = requests.get(url=baseUrl_companies + company_id, headers=headers)
+    response_object = get_company(company_id=company_id, headers=headers)
 
     test_object = GlobalMethods(response_object)
     test_object.basic_checks_collection()
@@ -365,7 +365,7 @@ def test_014_issues_get_companies_with_limit_offset_and_status_company():
         Ошибка! Ожидали 'company_status': ACTIVE, а получили CLOSED
     """
     parameters = {"limit": 1, "offset": 1, "status": "ACTIVE"}
-    response_object = requests.get("https://restapi.tech/api/issues/companies", params=parameters)
+    response_object = requests.get(baseUrl_issues_companies, params=parameters)
 
     test_object = GlobalMethods(response_object)
     test_object.basic_checks_collection()
@@ -394,8 +394,8 @@ def test_015_issues_get_companies_by_id():
 
     Полученный результат: Превышено время ожидания ответа от сервера
     """
-    company_id = "2"
-    response_object = requests.get("https://restapi.tech/api/issues/companies/" + company_id)
+    company_id = "/2"
+    response_object = requests.get(baseUrl_issues_companies + company_id)
 
     test_object = GlobalMethods(response_object)
     test_object.basic_checks_collection()
