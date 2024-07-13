@@ -133,7 +133,6 @@ def test_020_create_user(create_and_delete_user):
         Новая запись JSON ответа соответствует тому, что мы отправляли при регистрации + содержит Id созданного юзера.
     """
     response_object = create_and_delete_user(user_data)
-    print(response_object.json())
 
     test_object = GlobalMethods(response_object)
     test_object.validate_json_schema(ModelUser201)
@@ -310,6 +309,32 @@ def test_026_update_user(create_and_delete_user, update_user):
     test_object_users = UsersMethods(response_object)
     test_object_users.user_validation(update_data)
 
+@pytest.mark.users
+def test_027_pdate_user_with_incorrect_user_id(update_user):
+    """
+    Отредактировать не существующего пользователя (не существующий user_id)
+
+    Ожидаемый результат:
+        Статус-код 404;
+        Время ответа сервера - не превышает 500ms;
+        Схема JSON-ответа соответствует Требованиям;
+        Response header "Content-Type": "application/json"
+        Response header "Connection": "keep-alive"
+        В JSON - присутствует ключ detail, значением является описание ошибки
+        В тексте ошибки указан отправленный нами "user_id"
+    """
+    user_id = 99999  # не существующий user_id
+    update_data = {"first_name": "Гена", "last_name": "Пипеткин", "company_id": 3}
+    response_object = update_user(update_data, user_id)
+
+    test_object = GlobalMethods(response_object)
+    test_object.validate_status_code(404)
+    test_object.validate_json_schema(Model404)
+    test_object.validate_response_header("Content-type", "application/json")
+    test_object.validate_response_header("Connection", "keep-alive")
+
+    test_object_users = UsersMethods(response_object)
+    test_object_users.validate_response_message_about_error_404(user_id)
 
 
 
