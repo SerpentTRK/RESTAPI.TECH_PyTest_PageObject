@@ -2,28 +2,14 @@
 import pytest
 import requests
 
-from src.configuration import baseUrl_issues_companies
+from src.configuration import baseUrl_companies, baseUrl_issues_companies
+from src.classes.global_methods import GlobalMethods
+from src.classes.companies_methods import CompaniesMethods
 
-from src.test_workspace.companies.companies_with_incorrect_int_query_offset import CompaniesWithIncorrectIntQueryOffset
-from src.test_workspace.companies.companies_with_incorrect_str_query_offset import \
-    GetCompaniesWithIncorrectStrQueryOffset
-from src.test_workspace.companies.get_compani_with_incorrect_status_ABCDE import GetCompaniEithIncorrectStatusABCDE
-from src.test_workspace.companies.get_companies_default_request import GetCompaniesDefaultRequest
-from src.test_workspace.companies.get_companies_with_limit_and_offset import GetCompaniesWithLimitAndOffset
-from src.test_workspace.companies.get_companies_without_ssl import GetCompaniesWithoutSsl
-from src.test_workspace.companies.get_companies_with_different_query_statuses import \
-    GetCompaniesWithDifferentQueryStatuses
-from src.test_workspace.companies.get_companies_with_incorrect_int_query_limit import \
-    GetCompaniesWithIncorrectIntQueryLimit
-from src.test_workspace.companies.get_companies_with_incorrect_str_query_limit import \
-    GetCompaniesWithIncorrectStrQueryLimit
-from src.test_workspace.companies.get_company_by_id import GetCompanyById
-from src.test_workspace.companies.get_company_by_id_and_supported_language import GetCompanyByIdAndSupportedLanguage
-from src.test_workspace.companies.get_company_by_id_and_unsupported_language import GetCompanyByIdAndUnsupportedLanguage
-from src.test_workspace.companies.get_company_by_incorrect_id import GetCompanyByIncorrectId
-from src.test_workspace.companies.issues_get_companies_by_id import IssuesGetCompaniesById
-from src.test_workspace.companies.issues_get_companies_with_limit_offset_and_status_company import \
-    IssuesGetCompaniesWithLimitOffsetAndStatusCompany
+from src.pydantic_shemas.model_companies_200 import ModelCompanies200
+from src.pydantic_shemas.model_company_200 import ModelCompany200
+from src.pydantic_shemas.model_422 import Model422
+from src.pydantic_shemas.model_404 import Model404
 
 
 @pytest.mark.companies
@@ -39,8 +25,15 @@ def test_001_get_companies_default_request(get_company):
         Response header "Connection": "keep-alive"
         В JSON 3 компании, company_status = ACTIVE
     """
-    api = GetCompaniesDefaultRequest(get_company())
-    api.run_tests()
+    response_object = get_company()
+
+    test_object = GlobalMethods(response_object)
+    test_object.basic_checks_collection()
+    test_object.validate_json_schema(ModelCompanies200)
+
+    test_object_companies = CompaniesMethods(response_object)
+    test_object_companies.validate_limit(3)
+    test_object_companies.validate_companies_statuses("ACTIVE")
 
 @pytest.mark.companies
 def test_002_get_companies_without_ssl():
@@ -56,8 +49,12 @@ def test_002_get_companies_without_ssl():
     """
     response_object = requests.get("http://restapi.tech/api/companies", allow_redirects=False)
 
-    api = GetCompaniesWithoutSsl(response_object)
-    api.run_tests()
+    test_object = GlobalMethods(response_object)
+    test_object.validate_status_code(301)
+    test_object.validate_response_header("Connection", "keep-alive")
+    test_object.validate_time_from_request_to_response()
+    assert response_object.url == "http://restapi.tech/api/companies"
+    assert response_object.headers["Location"] == "https://restapi.tech/api/companies"
 
 @pytest.mark.companies
 def test_003_get_companies_with_limit_and_offset(get_company):
@@ -72,10 +69,17 @@ def test_003_get_companies_with_limit_and_offset(get_company):
         Response header "Connection": "keep-alive"
         В JSON data 5 компаний (limit = 5), company_id первой = 3 (offset = 2)
     """
-    parameters = {"limit": 5, "offset": 2}
+    limit_value, offset_value = 5, 2
+    parameters = {"limit": limit_value, "offset": offset_value}
+    response_object = get_company(parameters=parameters)
 
-    api = GetCompaniesWithLimitAndOffset(get_company(parameters=parameters))
-    api.run_tests()
+    test_object = GlobalMethods(response_object)
+    test_object.basic_checks_collection()
+    test_object.validate_json_schema(ModelCompanies200)
+
+    test_object_companies = CompaniesMethods(response_object)
+    test_object_companies.validate_limit(limit_value)
+    test_object_companies.offset_validation(offset_value)
 
 @pytest.mark.companies
 @pytest.mark.parametrize("company_status", [("ACTIVE"), ("CLOSED"), ("BANKRUPT")], ids=str)
@@ -91,10 +95,16 @@ def test_004_get_companies_with_different_query_statuses(company_status, get_com
         Response header "Connection": "keep-alive"
         В JSON компании только с указанным статусом
     """
-    parameters = {"status": company_status}
+    query_parameter = "status"
+    parameters = {query_parameter: company_status}
+    response_object = get_company(parameters=parameters)
 
-    api = GetCompaniesWithDifferentQueryStatuses(get_company(parameters=parameters))
-    api.run_tests(company_status)
+    test_object = GlobalMethods(response_object)
+    test_object.basic_checks_collection()
+    test_object.validate_json_schema(ModelCompanies200)
+
+    test_object_companies = CompaniesMethods(response_object)
+    test_object_companies.validate_companies_statuses(company_status)
 
 @pytest.mark.companies
 def test_005_get_compani_with_incorrect_status_ABCDE(get_company):
@@ -109,10 +119,18 @@ def test_005_get_compani_with_incorrect_status_ABCDE(get_company):
         Response header "Connection": "keep-alive"
         В JSON присутствует описание ошибки
     """
-    parameters = {"status": "ABCDE"}
+    query_parameter, value = "status", "ABCDE"
+    parameters = {query_parameter: value}
+    response_object = get_company(parameters=parameters)
 
-    api = GetCompaniEithIncorrectStatusABCDE(get_company(parameters=parameters))
-    api.run_tests()
+    test_object = GlobalMethods(response_object)
+    test_object.validate_status_code(422)
+    test_object.validate_json_schema(Model422)
+    test_object.validate_response_header("Content-Type", "application/json")
+    test_object.validate_response_header("Connection", "keep-alive")
+    test_object.validate_time_from_request_to_response()
+
+    test_object.validate_error_message_with_status_code_422(query_parameter, value)
 
 @pytest.mark.skip("{id записи об ошибке} Вместо 422 получаем статус-код 200. Skip-аем пока не починят")
 @pytest.mark.companies
@@ -130,10 +148,20 @@ def test_006_get_companies_with_incorrect_int_query_limit(get_company):
 
     Полученный результат: Выгружены все компании из БД, статус-код 200
     """
-    parameters = {"limit": -1}
+    query_parameter, value = "limit", -1
+    parameters = {query_parameter: value}
+    response_object = get_company(parameters=parameters)
 
-    api = GetCompaniesWithIncorrectIntQueryLimit(get_company(parameters=parameters))
-    api.run_tests()
+    test_object = GlobalMethods(response_object)
+    test_object.validate_status_code(422)
+    test_object.validate_json_schema(Model422)
+    test_object.validate_response_header("Content-Type", "application/json")
+    test_object.validate_response_header("Connection", "keep-alive")
+    test_object.validate_time_from_request_to_response()
+
+    # если бы это была не учебная база, то можно было бы провалидировать и сообщение об ошибке, но мы не знаем этого
+    # сообщения, потому и метод создать для этого случая не можем
+    test_object.validate_error_message_with_status_code_422(query_parameter, value)
 
 @pytest.mark.companies
 def test_007_get_companies_with_incorrect_str_query_limit(get_company):
@@ -148,10 +176,18 @@ def test_007_get_companies_with_incorrect_str_query_limit(get_company):
         Response header "Connection": "keep-alive"
         В JSON присутствует описание ошибки
     """
-    parameters = {"limit": "abc"}
+    query_parameter, value = "limit", "abc"
+    parameters = {query_parameter: value}
+    response_object = get_company(parameters=parameters)
 
-    api = GetCompaniesWithIncorrectStrQueryLimit(get_company(parameters=parameters))
-    api.run_tests()
+    test_object = GlobalMethods(response_object)
+    test_object.validate_status_code(422)
+    test_object.validate_json_schema(Model422)
+    test_object.validate_response_header("Content-Type", "application/json")
+    test_object.validate_response_header("Connection", "keep-alive")
+    test_object.validate_time_from_request_to_response()
+
+    test_object.validate_error_message_with_status_code_422(query_parameter, value)
 
 @pytest.mark.companies
 def test_008_companies_with_incorrect_int_query_offset(get_company):
@@ -167,13 +203,20 @@ def test_008_companies_with_incorrect_int_query_offset(get_company):
         В JSON id первой в списке компании начинается = 1, и количество компаний = 3
         (выводятся значения по-умолчанию, как в test_001_get_companies_default_request)
     """
-    parameters = {"offset": -1}
+    query_parameter, value = "offset", -1
+    parameters = {query_parameter: value}
+    response_object = get_company(parameters=parameters)
 
-    api = CompaniesWithIncorrectIntQueryOffset(get_company(parameters=parameters))
-    api.run_tests()
+    test_object = GlobalMethods(response_object)
+    test_object.basic_checks_collection()
+    test_object.validate_json_schema(ModelCompanies200)
+
+    test_object_companies = CompaniesMethods(response_object)
+    test_object_companies.validate_limit(3)
+    test_object_companies.validate_companies_statuses("ACTIVE")
 
 @pytest.mark.companies
-def test_009_get_companies_with_incorrect_str_query_offset(get_company):
+def test_009_companies_with_incorrect_str_query_offset(get_company):
     """
     Получить список компаний с указанием строчного значения offset = "abc"
 
@@ -185,10 +228,18 @@ def test_009_get_companies_with_incorrect_str_query_offset(get_company):
         Response header "Connection": "keep-alive"
         В JSON присутствует описание ошибки
     """
-    parameters = {"offset": "abc"}
+    query_parameter, value = "offset", "abc"
+    parameters = {query_parameter: value}
+    response_object = get_company(parameters=parameters)
 
-    api = GetCompaniesWithIncorrectStrQueryOffset(get_company(parameters=parameters))
-    api.run_tests()
+    test_object = GlobalMethods(response_object)
+    test_object.validate_status_code(422)
+    test_object.validate_json_schema(Model422)
+    test_object.validate_response_header("Content-Type", "application/json")
+    test_object.validate_response_header("Connection", "keep-alive")
+    test_object.validate_time_from_request_to_response()
+
+    test_object.validate_error_message_with_status_code_422(query_parameter, value)
 
 @pytest.mark.companies
 def test_010_get_company_by_id(get_company):
@@ -203,8 +254,16 @@ def test_010_get_company_by_id(get_company):
         Response header "Connection": "keep-alive"
         В JSON - company_id совпадает с id URI и первый в списке поддерживаемых языков EN;
     """
-    api = GetCompanyById(get_company(company_id="/1"))
-    api.run_tests()
+    company_id = "/1"
+    response_object = get_company(company_id=company_id)
+
+    test_object = GlobalMethods(response_object)
+    test_object.basic_checks_collection()
+    test_object.validate_json_schema(ModelCompany200)
+
+    test_object_companies = CompaniesMethods(response_object)
+    test_object_companies.validate_uri_in_request_and_response(baseUrl_companies + company_id)
+    test_object_companies.validate_first_language()
 
 @pytest.mark.companies
 def test_011_get_company_by_incorrect_id(get_company):
@@ -220,8 +279,18 @@ def test_011_get_company_by_incorrect_id(get_company):
         В JSON - присутствует ключ detail, значением является описание ошибки, company_id в
         сообщении совпадает с company_id из реквеста
     """
-    api = GetCompanyByIncorrectId(get_company(company_id="/8"))
-    api.run_tests()
+    company_id = "/8"
+    response_object = get_company(company_id=company_id)
+
+    test_object = GlobalMethods(response_object)
+    test_object.validate_json_schema(Model404)
+    test_object.validate_status_code(404)
+    test_object.validate_response_header("Content-Type", "application/json")
+    test_object.validate_response_header("Connection", "keep-alive")
+    test_object.validate_time_from_request_to_response()
+
+    test_object_companies = CompaniesMethods(response_object)
+    test_object_companies.validate_response_message_about_error_404(company_id)
 
 def test_012_get_company_by_id_and_supported_language(get_company):
     """
@@ -236,10 +305,18 @@ def test_012_get_company_by_id_and_supported_language(get_company):
         company_id в JSON совпадает с id URI;
         Текст в description на Русском языке
     """
-    headers = {"Accept-Language": "RU"}
+    company_id = "/1"
+    query_parameter, value = "Accept-Language", "RU"
+    headers = {query_parameter: value}
+    response_object = get_company(headers=headers, company_id=company_id)
 
-    api = GetCompanyByIdAndSupportedLanguage(get_company(headers=headers, company_id="/1"))
-    api.run_tests()
+    test_object = GlobalMethods(response_object)
+    test_object.basic_checks_collection()
+    test_object.validate_json_schema(ModelCompany200)
+
+    test_object_companies = CompaniesMethods(response_object)
+    test_object_companies.validate_uri_in_request_and_response(baseUrl_companies + company_id)
+    test_object_companies.validate_language(value)
 
 def test_013_get_company_by_id_and_unsupported_language(get_company):
     """
@@ -255,10 +332,18 @@ def test_013_get_company_by_id_and_unsupported_language(get_company):
         Выгружены все поддерживаемы языки (как в тесте test_010_get_company_by_id),
         первый в списке поддерживаемых языков EN;
     """
-    headers = {"Accept-Language": "KZ"}
+    company_id = "/1"
+    query_parameter, value = "Accept-Language", "KZ"
+    headers = {query_parameter: value}
+    response_object = get_company(company_id=company_id, headers=headers)
 
-    api = GetCompanyByIdAndUnsupportedLanguage(get_company(headers=headers, company_id="/1"))
-    api.run_tests()
+    test_object = GlobalMethods(response_object)
+    test_object.basic_checks_collection()
+    test_object.validate_json_schema(ModelCompany200)
+
+    test_object_companies = CompaniesMethods(response_object)
+    test_object_companies.validate_uri_in_request_and_response(baseUrl_companies + company_id)
+    test_object_companies.validate_first_language()
 
 @pytest.mark.companies
 # @pytest.mark.xfail(raises=AssertionError)
@@ -281,8 +366,14 @@ def test_014_issues_get_companies_with_limit_offset_and_status_company():
     parameters = {"limit": 1, "offset": 1, "status": "ACTIVE"}
     response_object = requests.get(baseUrl_issues_companies, params=parameters)
 
-    api = IssuesGetCompaniesWithLimitOffsetAndStatusCompany(response_object)
-    api.run_tests()
+    test_object = GlobalMethods(response_object)
+    test_object.basic_checks_collection()
+    test_object.validate_json_schema(ModelCompanies200)
+
+    test_object_companies = CompaniesMethods(response_object)
+    test_object_companies.validate_limit(1)
+    test_object_companies.offset_validation(1)
+    test_object_companies.validate_companies_statuses("ACTIVE")
 
 @pytest.mark.companies
 # @pytest.mark.xfail(raises=AssertionError)
@@ -305,36 +396,6 @@ def test_015_issues_get_companies_by_id():
     company_id = "/2"
     response_object = requests.get(baseUrl_issues_companies + company_id)
 
-    api = IssuesGetCompaniesById(response_object)
-    api.run_tests()
-
-
-
-
-
-
-
-@pytest.mark.skip("Это черновик")
-def test_test():
-    """
-    черновик
-    print(response_object.__getstate__())  # вообще все выгружается, что есть
-    """
-    import re
-
-    company_id = "2"
-    response_object = requests.get("https://restapi.tech/api/issues/companies/" + company_id)
-
-    response_time = int(response_object.elapsed.seconds) + int(response_object.elapsed.microseconds) / 100
-    # print(response_object.elapsed.seconds, response_object.elapsed.microseconds, response_object.elapsed)
-    #
-    # print(response_object.elapsed.seconds)
-
-    print(500, 500 * 10**-6)
-    print(response_object.elapsed, response_object.elapsed.microseconds * 10**-3)
-    # print(response_object.elapsed.seconds, response_object.elapsed.microseconds * 10**-6)
-    # print(response_object.elapsed.seconds + response_object.elapsed.microseconds * 10 ** -6)
-
-
-        # print(response_object.json())
-
+    test_object = GlobalMethods(response_object)
+    test_object.basic_checks_collection()
+    test_object.validate_json_schema(ModelCompany200)
