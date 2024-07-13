@@ -4,30 +4,30 @@ import requests
 
 from src.configuration import baseUrl_issues_companies
 
-from src.test_workspace.companies.companies_with_incorrect_int_query_offset import CompaniesWithIncorrectIntQueryOffset
-from src.test_workspace.companies.companies_with_incorrect_str_query_offset import \
+from src.test_workspace.companies.companies_with_incorrect_int_query_offset_008 import CompaniesWithIncorrectIntQueryOffset
+from src.test_workspace.companies.companies_with_incorrect_str_query_offset_009 import \
     GetCompaniesWithIncorrectStrQueryOffset
-from src.test_workspace.companies.get_compani_with_incorrect_status_ABCDE import GetCompaniEithIncorrectStatusABCDE
-from src.test_workspace.companies.get_companies_default_request import GetCompaniesDefaultRequest
-from src.test_workspace.companies.get_companies_with_limit_and_offset import GetCompaniesWithLimitAndOffset
-from src.test_workspace.companies.get_companies_without_ssl import GetCompaniesWithoutSsl
-from src.test_workspace.companies.get_companies_with_different_query_statuses import \
+from src.test_workspace.companies.get_compani_with_incorrect_status_ABCDE_005 import GetCompaniEithIncorrectStatusABCDE
+from src.test_workspace.companies.get_companies_default_request_001 import GetCompaniesDefaultRequest
+from src.test_workspace.companies.get_companies_with_limit_and_offset_003 import GetCompaniesWithLimitAndOffset
+from src.test_workspace.companies.get_companies_without_ssl_002 import GetCompaniesWithoutSsl
+from src.test_workspace.companies.get_companies_with_different_query_statuses_004 import \
     GetCompaniesWithDifferentQueryStatuses
-from src.test_workspace.companies.get_companies_with_incorrect_int_query_limit import \
+from src.test_workspace.companies.get_companies_with_incorrect_int_query_limit_006 import \
     GetCompaniesWithIncorrectIntQueryLimit
-from src.test_workspace.companies.get_companies_with_incorrect_str_query_limit import \
+from src.test_workspace.companies.get_companies_with_incorrect_str_query_limit_007 import \
     GetCompaniesWithIncorrectStrQueryLimit
-from src.test_workspace.companies.get_company_by_id import GetCompanyById
-from src.test_workspace.companies.get_company_by_id_and_supported_language import GetCompanyByIdAndSupportedLanguage
-from src.test_workspace.companies.get_company_by_id_and_unsupported_language import GetCompanyByIdAndUnsupportedLanguage
-from src.test_workspace.companies.get_company_by_incorrect_id import GetCompanyByIncorrectId
-from src.test_workspace.companies.issues_get_companies_by_id import IssuesGetCompaniesById
-from src.test_workspace.companies.issues_get_companies_with_limit_offset_and_status_company import \
+from src.test_workspace.companies.get_company_by_id_010 import GetCompanyById
+from src.test_workspace.companies.get_company_by_id_and_supported_language_012 import GetCompanyByIdAndSupportedLanguage
+from src.test_workspace.companies.get_company_by_id_and_unsupported_language_013 import GetCompanyByIdAndUnsupportedLanguage
+from src.test_workspace.companies.get_company_by_incorrect_id_011 import GetCompanyByIncorrectId
+from src.test_workspace.companies.issues_get_companies_by_id_015 import IssuesGetCompaniesById
+from src.test_workspace.companies.issues_get_companies_with_limit_offset_and_status_company_014 import \
     IssuesGetCompaniesWithLimitOffsetAndStatusCompany
 
 
 @pytest.mark.companies
-def test_001_get_companies_default_request(get_company):
+def test_get_companies_default_request_001(get_company):
     """
     Получить список компаний.
 
@@ -43,7 +43,7 @@ def test_001_get_companies_default_request(get_company):
     api.run_tests()
 
 @pytest.mark.companies
-def test_002_get_companies_without_ssl():
+def test_get_companies_without_ssl_002():
     """
     Получить список компаний HTTP-запросом (не HTTPS)
 
@@ -60,7 +60,7 @@ def test_002_get_companies_without_ssl():
     api.run_tests()
 
 @pytest.mark.companies
-def test_003_get_companies_with_limit_and_offset(get_company):
+def test_get_companies_with_limit_and_offset_003(get_company):
     """
     Получить список компаний с указанием limit=5 и offset=2
 
@@ -79,7 +79,7 @@ def test_003_get_companies_with_limit_and_offset(get_company):
 
 @pytest.mark.companies
 @pytest.mark.parametrize("company_status", [("ACTIVE"), ("CLOSED"), ("BANKRUPT")], ids=str)
-def test_004_get_companies_with_different_query_statuses(company_status, get_company):
+def test_get_companies_with_different_query_statuses_004(company_status, get_company):
     """
     Получить список компаний с разными "company_status" = "ACTIVE", "CLOSED" или "BANKRUPT"
 
@@ -97,7 +97,7 @@ def test_004_get_companies_with_different_query_statuses(company_status, get_com
     api.run_tests(company_status)
 
 @pytest.mark.companies
-def test_005_get_compani_with_incorrect_status_ABCDE(get_company):
+def test_get_compani_with_incorrect_status_ABCDE_005(get_company):
     """
     Получить список компаний с указанием не сущестующего "company_status": "ABCDE"
 
@@ -116,7 +116,7 @@ def test_005_get_compani_with_incorrect_status_ABCDE(get_company):
 
 @pytest.mark.skip("{id записи об ошибке} Вместо 422 получаем статус-код 200. Skip-аем пока не починят")
 @pytest.mark.companies
-def test_006_get_companies_with_incorrect_int_query_limit(get_company):
+def test_get_companies_with_incorrect_int_query_limit_006(get_company):
     """
     Получить список компаний с указанием отрицательного лимита limit = -1
 
@@ -136,7 +136,7 @@ def test_006_get_companies_with_incorrect_int_query_limit(get_company):
     api.run_tests()
 
 @pytest.mark.companies
-def test_007_get_companies_with_incorrect_str_query_limit(get_company):
+def test_get_companies_with_incorrect_str_query_limit_007(get_company):
     """
     Получить список компаний с указанием строчного значения limit = "abc"
 
@@ -154,7 +154,7 @@ def test_007_get_companies_with_incorrect_str_query_limit(get_company):
     api.run_tests()
 
 @pytest.mark.companies
-def test_008_companies_with_incorrect_int_query_offset(get_company):
+def test_companies_with_incorrect_int_query_offset_008(get_company):
     """
     Получить список компаний с указанием отрицательного значения offset = -1
 
@@ -173,7 +173,7 @@ def test_008_companies_with_incorrect_int_query_offset(get_company):
     api.run_tests()
 
 @pytest.mark.companies
-def test_009_get_companies_with_incorrect_str_query_offset(get_company):
+def test_get_companies_with_incorrect_str_query_offset_009(get_company):
     """
     Получить список компаний с указанием строчного значения offset = "abc"
 
@@ -191,7 +191,7 @@ def test_009_get_companies_with_incorrect_str_query_offset(get_company):
     api.run_tests()
 
 @pytest.mark.companies
-def test_010_get_company_by_id(get_company):
+def test_get_company_by_id_010(get_company):
     """
     Получить информацию о компании по существующему Id=1 в эндпоинте URI
 
@@ -207,7 +207,7 @@ def test_010_get_company_by_id(get_company):
     api.run_tests()
 
 @pytest.mark.companies
-def test_011_get_company_by_incorrect_id(get_company):
+def test_get_company_by_incorrect_id_011(get_company):
     """
     Получить информацию о компании по не существующему Id=8 в эндпоинте URI
 
@@ -223,7 +223,7 @@ def test_011_get_company_by_incorrect_id(get_company):
     api = GetCompanyByIncorrectId(get_company(company_id="/8"))
     api.run_tests()
 
-def test_012_get_company_by_id_and_supported_language(get_company):
+def test_get_company_by_id_and_supported_language_012(get_company):
     """
     Получить информацию о компании по существующему id=1 в эндпоинте URI, с выбором поддерживаемого языка RU
 
@@ -241,7 +241,7 @@ def test_012_get_company_by_id_and_supported_language(get_company):
     api = GetCompanyByIdAndSupportedLanguage(get_company(headers=headers, company_id="/1"))
     api.run_tests()
 
-def test_013_get_company_by_id_and_unsupported_language(get_company):
+def test_get_company_by_id_and_unsupported_language_013(get_company):
     """
     Получить информацию о компании по существующему id=1 в эндпоинте URI, с выбором не поддерживаемого языка KZ
 
@@ -262,7 +262,7 @@ def test_013_get_company_by_id_and_unsupported_language(get_company):
 
 @pytest.mark.companies
 # @pytest.mark.xfail(raises=AssertionError)
-def test_014_issues_get_companies_with_limit_offset_and_status_company():
+def test_issues_get_companies_with_limit_offset_and_status_company_014():
     """
     Это специальный тест, где мы получим заведомо не верный ответ от сервера.
     Получение списка компаний с указанием limit=1 ,offset=1 и status_company = ACTIVE
@@ -286,7 +286,7 @@ def test_014_issues_get_companies_with_limit_offset_and_status_company():
 
 @pytest.mark.companies
 # @pytest.mark.xfail(raises=AssertionError)
-def test_015_issues_get_companies_by_id():
+def test_issues_get_companies_by_id_015():
     """
     Это специальный тест, где мы получим заведомо не верный ответ от сервера.
     Получение компании по company_id

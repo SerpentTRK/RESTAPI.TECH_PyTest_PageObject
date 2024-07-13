@@ -63,6 +63,9 @@ class GlobalMethods:
         Валидация сообщений об ошибках для разных query-параметров
         """
         for elem in self.response.json().get("detail"):
+            if msg:
+                check.equal(elem["msg"], msg,
+                    msg=f"Ошибка! Ожидаемый текст ошибки: '{msg}' не совпадает с полученным: '{elem['msg']}'")
             if query_parameter == "status":
                 error_message = "Input should be 'ACTIVE', 'CLOSED' or 'BANKRUPT'"
             if query_parameter in ["limit", "offset"]:
@@ -73,11 +76,6 @@ class GlobalMethods:
                 check.equal(elem["input"], value,
                     msg=f"Ошибка! Отправленное значение: {value} не совпадает с полученным: {elem['input']}")
 
-            # это для случаев, когда нет query-параметров, а данные передаются через request_body
-            if msg:
-
-                check.equal(elem["msg"], msg,
-                    msg=f"Ошибка! Ожидаемый текст ошибки: '{msg}' не совпадает с полученным: '{elem['msg']}'")
 
 
 

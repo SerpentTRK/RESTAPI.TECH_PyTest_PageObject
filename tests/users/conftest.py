@@ -35,7 +35,6 @@ def delete_user():
         return response_object
     return _wrapped
 
-
 @pytest.fixture
 def create_user():
     """

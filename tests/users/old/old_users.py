@@ -3,29 +3,22 @@ import pytest
 import requests
 import json
 
+from src.classes.companies_methods import CompaniesMethods
 from src.configuration import user_data, baseUrl_issues_users
 
-from src.test_workspace.users._issues_get_created_user_by_id_032 import IssuesGetCreatedUserById
-from src.test_workspace.users.create_user_020 import CreateUser
-from src.test_workspace.users.create_user_in_with_closed_status_023 import CreateUserWithClosedStatus
-from src.test_workspace.users.create_user_with_incorrect_company_id_021 import CreateUserWithIncorrectCompanyId
-from src.test_workspace.users.create_user_with_null_and_empty_last_name_022 import CreateUserWithNullAndEmptyLastName
-from src.test_workspace.users.delete_user_029 import DeleteUser
-from src.test_workspace.users.delete_user_with_incorrect_user_id_031 import DeleteUserWithIncorrectUserId
-from src.test_workspace.users.get_created_user_by_incorrect_id_025 import GetCreatedUserByIncorrectId
-from src.test_workspace.users.get_user_by_id_024 import GetUserById
-from src.test_workspace.users.get_users_list_by_http_019 import GetUsersListByHttp
-from src.test_workspace.users.get_users_with_incorrect_limit_017 import GetUsersWithIncorrectLimit
-from src.test_workspace.users.get_users_with_limit_and_offset_016 import GetUsersWithLimitAndOffset
-from src.test_workspace.users.issues_create_user_033 import IssuesCreateUser
-from src.test_workspace.users.twice_deleted_user_030 import TwiceDeletedUser
-from src.test_workspace.users.update_user_026 import UpdateUser
-from src.test_workspace.users.update_user_with_incorrect_company_id_028 import UpdateUserWithIncorrectCompanyId
-from src.test_workspace.users.update_user_with_incorrect_user_id_027 import UpdateUserWithIncorrectUserId
+from src.classes.global_methods import GlobalMethods
+from src.classes.users_methods import UsersMethods
+from src.pydantic_shemas.model_https_400 import Model400
+
+from src.pydantic_shemas.model_users_200 import ModelUsers200
+from src.pydantic_shemas.model_user_200 import ModelUser200
+from src.pydantic_shemas.model_422 import Model422
+from src.pydantic_shemas.model_404 import Model404
+from src.pydantic_shemas.model_user_201 import ModelUser201
 
 
 @pytest.mark.users
-def test_get_users_with_limit_and_offset_016(get_users):
+def test_016_get_users_with_limit_and_offset(get_users):
     """
     Получить список пользователей с query-параметрами limit = 10 и offset = 5
 
@@ -37,14 +30,21 @@ def test_get_users_with_limit_and_offset_016(get_users):
         Response header "Connection": "keep-alive"
         В JSON data 10 пользователей, user_id начинается с 6-ой по счету записи
     """
-    parameters = {"limit": 10, "offset": 5, "status": "ACTIVE"}
+    limit_value, offset_value = 10, 5
+    parameters = {"limit": limit_value, "offset": offset_value, "status": "ACTIVE"}
+    response_object = get_users(parameters)
 
-    api = GetUsersWithLimitAndOffset(get_users(parameters))
-    api.run_tests()
+    test_object = GlobalMethods(response_object)
+    test_object.basic_checks_collection()
+    test_object.validate_json_schema(ModelUsers200)
+
+    test_object_users = UsersMethods(response_object)
+    test_object_users.limit_validation(limit_value)
+    test_object_users.offset_validation(offset_value)
 
 @pytest.mark.skip("{id записи об ошибке} Вместо 422 получаем статус-код 200. Skip-аем пока не починят")
 @pytest.mark.users
-def test_get_users_with_incorrect_limit_017(get_users):
+def test_017_get_users_with_incorrect_limit(get_users):
     """
     Получить список пользователей с отрицательным query-параметрам limit = -1
 
@@ -58,13 +58,19 @@ def test_get_users_with_incorrect_limit_017(get_users):
 
     Полученный результат: Выгружены все пользователи из БД, статус-код 200
     """
-    parameters = {"limit": -1}
+    limit_value = -1
+    parameters = {"limit": limit_value}
+    response_object = get_users(parameters)
 
-    api = GetUsersWithIncorrectLimit(get_users(parameters))
-    api.run_tests()
+    test_object = GlobalMethods(response_object)
+    test_object.validate_status_code(422)
+    test_object.validate_json_schema(Model422)
+    test_object.validate_response_header("Content-type", "application/json")
+    test_object.validate_response_header("Connection", "keep-alive")
+    test_object.validate_time_from_request_to_response()
 
 @pytest.mark.users
-def test_get_users_with_incorrect_str_limit_and_offset_018(get_users):
+def test_018_get_users_with_incorrect_str_limit_and_offset(get_users):
     """
     Получить список пользователей с query-параметрами limit = abc и offset = abc
 
@@ -78,13 +84,22 @@ def test_get_users_with_incorrect_str_limit_and_offset_018(get_users):
         Соединение безопасное, порт 443
         В JSON присутствует описание ошибки
     """
-    parameters = {"limit": "abc", "offset": "abc"}
+    limit_value, offset_value = "abc", "abc"
+    parameters = {"limit": limit_value, "offset": offset_value}
+    response_object = get_users(parameters)
 
-    api = GetUsersWithIncorrectLimit(get_users(parameters))
-    api.run_tests()
+    test_object = GlobalMethods(response_object)
+    test_object.validate_status_code(422)
+    test_object.validate_json_schema(Model422)
+    test_object.validate_response_header("Content-type", "application/json")
+    test_object.validate_response_header("Connection", "keep-alive")
+    test_object.validate_time_from_request_to_response()
+
+    test_object.validate_error_message_with_status_code_422("limit", limit_value)
+    test_object.validate_error_message_with_status_code_422("offset", offset_value)
 
 @pytest.mark.users
-def test_get_users_list_by_http_019():
+def test_019_get_users_list_by_http():
     """
     Получить списка компаний HTTP-запросом (не HTTPS)
 
@@ -97,11 +112,15 @@ def test_get_users_list_by_http_019():
     """
     response_object = requests.get("http://restapi.tech/api/users", allow_redirects=False)
 
-    api = GetUsersListByHttp(response_object)
-    api.run_tests()
+    test_object = GlobalMethods(response_object)
+    test_object.validate_status_code(301)
+    test_object.validate_response_header("Connection", "keep-alive")
+    test_object.validate_time_from_request_to_response()
+    assert response_object.url == "http://restapi.tech/api/users"
+    assert response_object.headers["Location"] == "https://restapi.tech/api/users"
 
 @pytest.mark.users
-def test_create_user_020(create_and_delete_user):
+def test_020_create_user(create_and_delete_user):
     """
     Зарегистрировать нового пользователя
 
@@ -113,11 +132,20 @@ def test_create_user_020(create_and_delete_user):
         Response header "Connection": "keep-alive"
         Новая запись JSON ответа соответствует тому, что мы отправляли при регистрации + содержит Id созданного юзера.
     """
-    api = CreateUser(create_and_delete_user(user_data))
-    api.run_tests()
+    response_object = create_and_delete_user(user_data)
+
+    test_object = GlobalMethods(response_object)
+    test_object.validate_json_schema(ModelUser201)
+    test_object.validate_status_code(201)
+    test_object.validate_response_header("Content-type", "application/json")
+    test_object.validate_response_header("Connection", "keep-alive")
+    test_object.validate_time_from_request_to_response()
+
+    test_object_users = UsersMethods(response_object)
+    test_object_users.user_validation(user_data)
 
 @pytest.mark.users
-def test_create_user_with_incorrect_company_id_021(create_user):
+def test_021_create_user_with_incorrect_company_id(create_user):
     """
     Зарегистрировать нового пользователя с не верным company_id
 
@@ -130,16 +158,25 @@ def test_create_user_with_incorrect_company_id_021(create_user):
         В JSON - присутствует ключ detail, значением является описание ошибки
         В тексте ошибки указан отправленный нами "company_id"
     """
-    user_data = {"first_name": "Вальдемар", "last_name": "Евлампиевич", "company_id": 33}
+    company_id = "33"
+    user_data = {"first_name": "Вальдемар", "last_name": "Евлампиевич", "company_id": company_id}
+    response_object = create_user(user_data)
 
-    api = CreateUserWithIncorrectCompanyId(create_user(user_data))
-    api.run_tests()
+    test_object = GlobalMethods(response_object)
+    test_object.validate_status_code(404)
+    test_object.validate_json_schema(Model404)
+    test_object.validate_response_header("Content-type", "application/json")
+    test_object.validate_response_header("Connection", "keep-alive")
+    test_object.validate_time_from_request_to_response()
+
+    test_object_companies = CompaniesMethods(response_object)
+    test_object_companies.validate_response_message_about_error_404(company_id)
 
 @pytest.mark.users
 @pytest.mark.parametrize("user_data",
              [({"first_name": "1", "last_name": None, "company_id": 3}),
               ({"first_name": "1", "company_id": 3})], ids=str)
-def test_create_user_with_null_and_empty_last_name_022(user_data, create_user):
+def test_022_create_user_with_null_and_empty_last_name(user_data, create_user):
     """
     Зарегистрировать пользователя:
         - обязательное полем "last_name" = None;
@@ -154,11 +191,22 @@ def test_create_user_with_null_and_empty_last_name_022(user_data, create_user):
         Response header "Connection": "keep-alive"
         В JSON присутствует описание ошибки
     """
-    api = CreateUserWithNullAndEmptyLastName(create_user(user_data))
-    api.run_tests(user_data)
+    response_object = create_user(user_data)
+
+    test_object = GlobalMethods(response_object)
+    test_object.validate_status_code(422)
+    test_object.validate_json_schema(Model422)
+    test_object.validate_response_header("Content-type", "application/json")
+    test_object.validate_response_header("Connection", "keep-alive")
+    test_object.validate_time_from_request_to_response()
+
+    if "last_name" in user_data:
+        test_object.validate_error_message_with_status_code_422("Input should be a valid string")
+    else:
+        test_object.validate_error_message_with_status_code_422("Field required")
 
 @pytest.mark.users
-def test_create_user_in_with_closed_status_023(create_user):
+def test_023_create_user_in_with_closed_status(create_user):
     """
     Создать пользователя в компании company_status = CLOSED
 
@@ -170,13 +218,22 @@ def test_create_user_in_with_closed_status_023(create_user):
         Response header "Connection": "keep-alive"
         В JSON присутствует описание ошибки
     """
-    user_data = {"first_name": "Вальдемар", "last_name": "Евлампиевич", "company_id": 5}
+    company_id = 5
+    user_data = {"first_name": "Вальдемар", "last_name": "Евлампиевич", "company_id": company_id}
+    response_object = create_user(user_data)
 
-    api = CreateUserWithClosedStatus(create_user(user_data))
-    api.run_tests()
+    test_object = GlobalMethods(response_object)
+    test_object.validate_status_code(400)
+    test_object.validate_json_schema(Model400)
+    test_object.validate_response_header("Content-type", "application/json")
+    test_object.validate_response_header("Connection", "keep-alive")
+    test_object.validate_time_from_request_to_response()
+
+    test_object_users = UsersMethods(response_object)
+    test_object_users.assert_response_message_about_error_400()
 
 @pytest.mark.users
-def test_get_user_by_id_024(create_and_delete_user, get_user_by_id):
+def test_024_get_user_by_id(create_and_delete_user, get_user_by_id):
     """
     Получить данные пользователя по его user_id
 
@@ -192,11 +249,17 @@ def test_get_user_by_id_024(create_and_delete_user, get_user_by_id):
     user_id = response_object_create_user.json().get("user_id")
 
     #Переходим к самому тесту
-    api = GetUserById(get_user_by_id(user_id))
-    api.run_tests()
+    response_object = get_user_by_id(user_id)
+
+    test_object = GlobalMethods(response_object)
+    test_object.basic_checks_collection()
+    test_object.validate_json_schema(ModelUser200)
+
+    test_object_users = UsersMethods(response_object)
+    test_object_users.user_validation(user_data)
 
 @pytest.mark.users
-def test_get_created_user_by_incorrect_id_025(get_user_by_id):
+def test_025_get_created_user_by_incorrect_id(get_user_by_id):
     """
     Получить данные пользователя по не корректному user_id
 
@@ -210,12 +273,20 @@ def test_get_created_user_by_incorrect_id_025(get_user_by_id):
         В тексте ошибки указан отправленный нами "user_id"
     """
     user_id = 1000000
+    response_object = get_user_by_id(user_id)
 
-    api = GetCreatedUserByIncorrectId(get_user_by_id(user_id))
-    api.run_tests()
+    test_object = GlobalMethods(response_object)
+    test_object.validate_status_code(404)
+    test_object.validate_json_schema(Model404)
+    test_object.validate_response_header("Content-type", "application/json")
+    test_object.validate_response_header("Connection", "keep-alive")
+    test_object.validate_time_from_request_to_response()
+
+    test_object_users = UsersMethods(response_object)
+    test_object_users.validate_response_message_about_error_404(user_id)
 
 @pytest.mark.users
-def test_update_user_026(create_and_delete_user, update_user):
+def test_026_update_user(create_and_delete_user, update_user):
     """
     Внести изменения в данные существующего пользователя
 
@@ -227,16 +298,22 @@ def test_update_user_026(create_and_delete_user, update_user):
         Response header "Connection": "keep-alive"
         Новая запись JSON ответа соответствует тому, что мы отправляли при редактировании пользователя
     """
-    update_data = {"first_name": "Гена", "last_name": "Пипеткин", "company_id": 3}
     response_object_create_user = create_and_delete_user(user_data)
     user_id = response_object_create_user.json().get("user_id")
 
     # Переходим к самому тесту
-    api = UpdateUser(update_user(update_data, user_id))
-    api.run_tests()
+    update_data = {"first_name": "Гена", "last_name": "Пипеткин", "company_id": 3}
+    response_object = update_user(update_data, user_id)
+
+    test_object = GlobalMethods(response_object)
+    test_object.basic_checks_collection()
+    test_object.validate_json_schema(ModelUser200)
+
+    test_object_users = UsersMethods(response_object)
+    test_object_users.user_validation(update_data)
 
 @pytest.mark.users
-def test_update_user_with_incorrect_user_id_027(update_user):
+def test_027_update_user_with_incorrect_user_id(update_user):
     """
     Отредактировать не существующего пользователя (не существующий user_id)
 
@@ -251,12 +328,20 @@ def test_update_user_with_incorrect_user_id_027(update_user):
     """
     user_id = 99999  # не существующий user_id
     update_data = {"first_name": "Гена", "last_name": "Пипеткин", "company_id": 3}
+    response_object = update_user(update_data, user_id)
 
-    api = UpdateUserWithIncorrectUserId(update_user(update_data, user_id))
-    api.run_tests()
+    test_object = GlobalMethods(response_object)
+    test_object.validate_status_code(404)
+    test_object.validate_json_schema(Model404)
+    test_object.validate_response_header("Content-type", "application/json")
+    test_object.validate_response_header("Connection", "keep-alive")
+    test_object.validate_time_from_request_to_response()
+
+    test_object_users = UsersMethods(response_object)
+    test_object_users.validate_response_message_about_error_404(user_id)
 
 @pytest.mark.users
-def test_update_user_with_incorrect_company_id_028(create_and_delete_user, update_user):
+def test_028_update_user_with_incorrect_company_id(create_and_delete_user, update_user):
     """
     Отредактировать пользователя не существующей компании (не существующий company_id)
 
@@ -268,15 +353,26 @@ def test_update_user_with_incorrect_company_id_028(create_and_delete_user, updat
         Response header "Connection": "keep-alive"
         В JSON присутствует описание ошибки
     """
-    update_data = {"first_name": "Маня", "last_name": "Пена", "company_id": 33}
     response_object_create_user = create_and_delete_user(user_data)
     user_id = response_object_create_user.json().get("user_id")
 
-    api = UpdateUserWithIncorrectCompanyId(update_user(update_data, user_id))
-    api.run_tests()
+    company_id = "33"
+    update_data = {"first_name": "Маня", "last_name": "Пена", "company_id": company_id}
+    response_object = update_user(update_data, user_id)
+
+    test_object = GlobalMethods(response_object)
+    test_object.validate_status_code(404)
+    test_object.validate_json_schema(Model404)
+    test_object.validate_response_header("Content-type", "application/json")
+    test_object.validate_response_header("Connection", "keep-alive")
+    test_object.validate_time_from_request_to_response()
+
+
+    test_object_companies = CompaniesMethods(response_object)
+    test_object_companies.validate_response_message_about_error_404(company_id)
 
 @pytest.mark.users
-def test_delete_user_029(create_user, delete_user):
+def test_029_delete_user(create_user, delete_user):
     """
     Удалить пользователя
 
@@ -290,11 +386,19 @@ def test_delete_user_029(create_user, delete_user):
     response_object_create_user = create_user(user_data)
     user_id = response_object_create_user.json().get("user_id")
 
-    api = DeleteUser(delete_user(user_id))
-    api.run_tests()
+    response_object_delete_user = delete_user(user_id)
+
+    delete_object = GlobalMethods(response_object_delete_user)
+    delete_object.validate_status_code(202)
+    delete_object.validate_response_header("Content-type", "application/json")
+    delete_object.validate_response_header("Connection", "keep-alive")
+    delete_object.validate_time_from_request_to_response()
+
+    test_object_users = UsersMethods(response_object_delete_user)
+    test_object_users.validate_response_with_code_202()
 
 @pytest.mark.users
-def test_twice_deleted_user_030(create_user, delete_user):
+def test_030_twice_deleted_user(create_user, delete_user):
     """
     Удалить удаленного пользователя
 
@@ -309,11 +413,20 @@ def test_twice_deleted_user_030(create_user, delete_user):
     user_id = response_object_create_user.json().get("user_id")
 
     delete_user(user_id)
-    api = TwiceDeletedUser(delete_user(user_id))
-    api.run_tests(user_id)
+    twice_delete_user = delete_user(user_id)
+
+    delete_object = GlobalMethods(twice_delete_user)
+    delete_object.validate_status_code(404)
+    delete_object.validate_json_schema(Model404)
+    delete_object.validate_response_header("Content-type", "application/json")
+    delete_object.validate_response_header("Connection", "keep-alive")
+    delete_object.validate_time_from_request_to_response()
+
+    test_object_users = UsersMethods(twice_delete_user)
+    test_object_users.validate_response_message_about_error_404(user_id)
 
 @pytest.mark.users
-def test_delete_user_with_incorrect_user_id_031(delete_user):
+def test_031_delete_user_with_incorrect_user_id(delete_user):
     """
     Удалить не существующего пользователя (не существующий user_id)
 
@@ -325,12 +438,19 @@ def test_delete_user_with_incorrect_user_id_031(delete_user):
         В тексте ошибки указан отправленный нами "user_id"
     """
     user_id = 99999
+    response_object_delete_user = delete_user(user_id)
 
-    api = DeleteUserWithIncorrectUserId(delete_user(user_id))
-    api.run_tests()
+    delete_object = GlobalMethods(response_object_delete_user)
+    delete_object.validate_status_code(404)
+    delete_object.validate_response_header("Content-type", "application/json")
+    delete_object.validate_response_header("Connection", "keep-alive")
+    delete_object.validate_time_from_request_to_response()
+
+    test_object_users = UsersMethods(response_object_delete_user)
+    test_object_users.validate_response_message_about_error_404(user_id)
 
 @pytest.mark.users
-def test_issues_get_created_user_by_id_032(create_and_delete_user):
+def test_032_issues_get_created_user_by_id(create_and_delete_user):
     """
     Это специальный тест, где мы получим заведомо не верный ответ от сервера.
     Получить данные пользователя по его user_id
@@ -350,11 +470,16 @@ def test_issues_get_created_user_by_id_032(create_and_delete_user):
 
     #Переходим к самому тесту
     response_object = requests.get(baseUrl_issues_users + f"/{user_id}")
-    api = IssuesGetCreatedUserById(response_object)
-    api.run_tests()
+
+    test_object = GlobalMethods(response_object)
+    test_object.basic_checks_collection()
+    test_object.validate_json_schema(ModelUser200)
+
+    test_object_users = UsersMethods(response_object)
+    test_object_users.user_validation(user_data)
 
 @pytest.mark.users
-def test_issues_create_user_033(delete_user):
+def test_033_issues_create_user(delete_user):
     """
     Это специальный тест, где мы получим заведомо не верный ответ от сервера.
     Зарегистрировать нового пользователя (делаем громоздко внутри теста, не используем фикстуру, т.к. тут уникальный
@@ -378,13 +503,17 @@ def test_issues_create_user_033(delete_user):
     response_object = requests.post(baseUrl_issues_users, headers=headers, data=payload)
     user_id = response_object.json().get("user_id")
 
-    api = IssuesCreateUser(response_object)
-    api.run_tests()
+    test_object = GlobalMethods(response_object)
+    test_object.validate_json_schema(ModelUser201)
+    test_object.validate_status_code(201)
+    test_object.validate_response_header("Content-type", "application/json")
+    test_object.validate_response_header("Connection", "keep-alive")
+    test_object.validate_time_from_request_to_response()
+
+    test_object_users = UsersMethods(response_object)
+    test_object_users.user_validation(user_data)
 
     delete_user(user_id)
-
-
-
 
 @pytest.mark.skip("Это черновик")
 def test_test():
