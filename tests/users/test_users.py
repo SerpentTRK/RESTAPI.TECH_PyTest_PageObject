@@ -139,6 +139,7 @@ def test_020_create_user(create_and_delete_user):
     test_object.validate_status_code(201)
     test_object.validate_response_header("Content-type", "application/json")
     test_object.validate_response_header("Connection", "keep-alive")
+    test_object.validate_time_from_request_to_response()
 
     test_object_users = UsersMethods(response_object)
     test_object_users.user_validation(user_data)
@@ -166,6 +167,7 @@ def test_021_create_user_with_incorrect_company_id(create_user):
     test_object.validate_json_schema(Model404)
     test_object.validate_response_header("Content-type", "application/json")
     test_object.validate_response_header("Connection", "keep-alive")
+    test_object.validate_time_from_request_to_response()
 
     test_object_companies = CompaniesMethods(response_object)
     test_object_companies.validate_response_message_about_error_404(company_id)
@@ -225,6 +227,7 @@ def test_023_create_user_in_with_closed_status(create_user):
     test_object.validate_json_schema(Model400)
     test_object.validate_response_header("Content-type", "application/json")
     test_object.validate_response_header("Connection", "keep-alive")
+    test_object.validate_time_from_request_to_response()
 
     test_object_users = UsersMethods(response_object)
     test_object_users.assert_response_message_about_error_400()
@@ -277,6 +280,7 @@ def test_025_get_created_user_by_incorrect_id(get_user_by_id):
     test_object.validate_json_schema(Model404)
     test_object.validate_response_header("Content-type", "application/json")
     test_object.validate_response_header("Connection", "keep-alive")
+    test_object.validate_time_from_request_to_response()
 
     test_object_users = UsersMethods(response_object)
     test_object_users.validate_response_message_about_error_404(user_id)
@@ -331,6 +335,7 @@ def test_027_update_user_with_incorrect_user_id(update_user):
     test_object.validate_json_schema(Model404)
     test_object.validate_response_header("Content-type", "application/json")
     test_object.validate_response_header("Connection", "keep-alive")
+    test_object.validate_time_from_request_to_response()
 
     test_object_users = UsersMethods(response_object)
     test_object_users.validate_response_message_about_error_404(user_id)
@@ -360,9 +365,89 @@ def test_028_update_user_with_incorrect_company_id(create_and_delete_user, updat
     test_object.validate_json_schema(Model404)
     test_object.validate_response_header("Content-type", "application/json")
     test_object.validate_response_header("Connection", "keep-alive")
+    test_object.validate_time_from_request_to_response()
+
 
     test_object_companies = CompaniesMethods(response_object)
     test_object_companies.validate_response_message_about_error_404(company_id)
+
+@pytest.mark.users
+def test_029_delete_user(create_user, delete_user):
+    """
+    Удалить пользователя
+
+    Ожидаемый результат:
+        Статус-код 202;
+        Время ответа сервера - не превышает 500ms;
+        Response header "Content-Type": "application/json"
+        Response header "Connection": "keep-alive"
+        В JSON ответа выводится: None
+    """
+    response_object_create_user = create_user(user_data)
+    user_id = response_object_create_user.json().get("user_id")
+
+    response_object_delete_user = delete_user(user_id)
+
+    delete_object = GlobalMethods(response_object_delete_user)
+    delete_object.validate_status_code(202)
+    delete_object.validate_response_header("Content-type", "application/json")
+    delete_object.validate_response_header("Connection", "keep-alive")
+    delete_object.validate_time_from_request_to_response()
+
+    test_object_users = UsersMethods(response_object_delete_user)
+    test_object_users.validate_response_with_code_202()
+
+@pytest.mark.users
+def test_030_twice_deleted_user(create_user, delete_user):
+    """
+    Удалить удаленного пользователя
+
+    Ожидаемый результат:
+        Статус-код 404;
+        Время ответа сервера - не превышает 500ms;
+        Response header "Content-Type": "application/json"
+        Response header "Connection": "keep-alive"
+        В тексте ошибки указан отправленный нами "user_id"
+    """
+    response_object_create_user = create_user(user_data)
+    user_id = response_object_create_user.json().get("user_id")
+
+    delete_user(user_id)
+    twice_delete_user = delete_user(user_id)
+
+    delete_object = GlobalMethods(twice_delete_user)
+    delete_object.validate_status_code(404)
+    delete_object.validate_json_schema(Model404)
+    delete_object.validate_response_header("Content-type", "application/json")
+    delete_object.validate_response_header("Connection", "keep-alive")
+    delete_object.validate_time_from_request_to_response()
+
+    test_object_users = UsersMethods(twice_delete_user)
+    test_object_users.validate_response_message_about_error_404(user_id)
+
+@pytest.mark.users
+def test_031_delete_user_with_incorrect_user_id(delete_user):
+    """
+    Удалить не существующего пользователя (не существующий user_id)
+
+    Ожидаемый результат:
+        Время ответа сервера - не превышает 500ms;
+        Response header "Content-Type": "application/json"
+        Response header "Connection": "keep-alive"
+        В тексте ошибки указан отправленный нами "user_id"
+    """
+    user_id = 99999
+    response_object_delete_user = delete_user(user_id)
+
+    delete_object = GlobalMethods(response_object_delete_user)
+    delete_object.validate_status_code(404)
+    delete_object.validate_response_header("Content-type", "application/json")
+    delete_object.validate_response_header("Connection", "keep-alive")
+    delete_object.validate_time_from_request_to_response()
+
+    test_object_users = UsersMethods(response_object_delete_user)
+    test_object_users.validate_response_message_about_error_404(user_id)
+
 
 
 

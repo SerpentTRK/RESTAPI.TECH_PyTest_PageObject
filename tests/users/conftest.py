@@ -31,8 +31,10 @@ def delete_user():
     def _wrapped(user_id):
         payload = {}
         headers = {}
-        requests.delete(baseUrl_users + "/" + str(user_id), headers=headers, data=payload)
+        response_object = requests.delete(baseUrl_users + "/" + str(user_id), headers=headers, data=payload)
+        return response_object
     return _wrapped
+
 
 @pytest.fixture
 def create_user():
@@ -55,7 +57,7 @@ def update_user():
     def _wrapped(update_data, user_id):
         payload = json.dumps(update_data)
         headers = {'Content-Type': 'application/json'}
-        response_object = requests.put(baseUrl_users +"/" + str(user_id), headers=headers, data=payload)
+        response_object = requests.put(baseUrl_users + "/" + str(user_id), headers=headers, data=payload)
 
         return response_object
     return _wrapped
