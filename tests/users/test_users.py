@@ -4,7 +4,7 @@ import requests
 import json
 
 from src.classes.companies_methods import CompaniesMethods
-from src.configuration import user_data
+from src.configuration import user_data, baseUrl_issues_users
 
 from src.classes.global_methods import GlobalMethods
 from src.classes.users_methods import UsersMethods
@@ -431,6 +431,7 @@ def test_031_delete_user_with_incorrect_user_id(delete_user):
     Удалить не существующего пользователя (не существующий user_id)
 
     Ожидаемый результат:
+        Статус-код 404;
         Время ответа сервера - не превышает 500ms;
         Response header "Content-Type": "application/json"
         Response header "Connection": "keep-alive"
@@ -448,8 +449,71 @@ def test_031_delete_user_with_incorrect_user_id(delete_user):
     test_object_users = UsersMethods(response_object_delete_user)
     test_object_users.validate_response_message_about_error_404(user_id)
 
+@pytest.mark.users
+def test_032_issues_get_created_user_by_id(create_and_delete_user):
+    """
+    Это специальный тест, где мы получим заведомо не верный ответ от сервера.
+    Получить данные пользователя по его user_id
 
+    Ожидаемый результат:
+        Статус-код 201;
+        Время ответа сервера - не превышает 500ms;
+        Схема JSON-ответа соответствует Требованиям;
+        Response header "Content-Type": "application/json"
+        Response header "Connection": "keep-alive"
+        Новая запись JSON ответа соответствует тому, что мы отправляли при регистрации + содержит Id созданного юзера.
 
+    Полученный результат: статус код 202 (запрос был принят на обработку, но она не завершена), и далее все не то.
+    """
+    response_object_create_user = create_and_delete_user(user_data)
+    user_id = response_object_create_user.json().get("user_id")
+
+    #Переходим к самому тесту
+    response_object = requests.get(baseUrl_issues_users + f"/{user_id}")
+
+    test_object = GlobalMethods(response_object)
+    test_object.basic_checks_collection()
+    test_object.validate_json_schema(ModelUser200)
+
+    test_object_users = UsersMethods(response_object)
+    test_object_users.user_validation(user_data)
+
+@pytest.mark.users
+def test_033_issues_create_user(delete_user):
+    """
+    Это специальный тест, где мы получим заведомо не верный ответ от сервера.
+    Зарегистрировать нового пользователя (делаем громоздко внутри теста, не используем фикстуру, т.к. тут уникальный
+    URL, и не хочется из-за него заводить новые фикстуры. Это, все-таки, специальная демонстрация возможных ошибок
+
+    Ожидаемый результат:
+        Запрос успешно отправлен;
+        Статус-код 201;
+        Время ответа сервера - не превышает 500ms;
+        Схема JSON-ответа соответствует Требованиям;
+        Response header "Content-Type" - "application/json"
+        Response header "Connection" - "keep-alive"
+        Соединение безопасное, порт 443
+        Новая запись JSON ответа соответствует тому, что мы отправляли при регистрации + содержит Id созданного юзера
+
+    Полученный результат: все данные пользователя не совпадают
+    """
+    user_data = {"first_name": "Дыр", "last_name": "Пыр", "company_id": 3}
+    payload = json.dumps(user_data)
+    headers = {'Content-Type': 'application/json'}
+    response_object = requests.post(baseUrl_issues_users, headers=headers, data=payload)
+    user_id = response_object.json().get("user_id")
+
+    test_object = GlobalMethods(response_object)
+    test_object.validate_json_schema(ModelUser201)
+    test_object.validate_status_code(201)
+    test_object.validate_response_header("Content-type", "application/json")
+    test_object.validate_response_header("Connection", "keep-alive")
+    test_object.validate_time_from_request_to_response()
+
+    test_object_users = UsersMethods(response_object)
+    test_object_users.user_validation(user_data)
+
+    delete_user(user_id)
 
 @pytest.mark.skip("Это черновик")
 def test_test():
