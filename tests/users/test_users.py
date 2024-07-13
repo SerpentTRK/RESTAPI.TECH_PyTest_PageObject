@@ -120,7 +120,7 @@ def test_019_get_users_list_by_http():
     assert response_object.headers["Location"] == "https://restapi.tech/api/users"
 
 @pytest.mark.users
-def test_020_create_user(create_user, delete_user):
+def test_020_create_user(create_and_delete_user):
     """
     Зарегистрировать нового пользователя
 
@@ -132,7 +132,8 @@ def test_020_create_user(create_user, delete_user):
         Response header "Connection": "keep-alive"
         Новая запись JSON ответа соответствует тому, что мы отправляли при регистрации + содержит Id созданного юзера.
     """
-    response_object = create_user(user_data)
+    response_object = create_and_delete_user(user_data)
+    print(response_object.json())
 
     test_object = GlobalMethods(response_object)
     test_object.validate_json_schema(ModelUser201)
@@ -142,19 +143,6 @@ def test_020_create_user(create_user, delete_user):
 
     test_object_users = UsersMethods(response_object)
     test_object_users.user_validation(user_data)
-
-    # чистим за собой БД, чтобы не засорять её тестовыми данными
-    user_id = response_object.json().get("user_id")
-    delete_user(user_id)
-
-    # test_object_users.validate_response_message_about_error_404(user_id)
-
-    # response_object_ater_delete_user_id = get_user_by_id(user_id)
-    # print(response_object_ater_delete_user_id.json())
-
-    # надо сделлать отдельный метод на удаление и  метод на получение юзера но левому id
-    # надо провалидировать удаление пользователя
-    # "reason": "User with requested id: 4377 is absent"
 
 @pytest.mark.users
 def test_021_create_user_with_incorrect_company_id(create_user):
@@ -243,7 +231,7 @@ def test_023_create_user_in_with_closed_status(create_user):
     test_object_users.assert_response_message_about_error_400()
 
 @pytest.mark.users
-def test_024_get_user_by_id(create_user, get_user_by_id, delete_user):
+def test_024_get_user_by_id(create_and_delete_user, get_user_by_id):
     """
     Получить данные пользователя по его user_id
 
@@ -255,8 +243,7 @@ def test_024_get_user_by_id(create_user, get_user_by_id, delete_user):
         Response header "Connection": "keep-alive"
         Запись JSON ответа соответствует тому, что мы отправляли при регистрации
     """
-    #Регистриуем тестового пользователя, т.к. пока некого запрашивать по user_id
-    response_object_create_user = create_user(user_data)
+    response_object_create_user = create_and_delete_user(user_data)
     user_id = response_object_create_user.json().get("user_id")
 
     #Переходим к самому тесту
@@ -268,9 +255,6 @@ def test_024_get_user_by_id(create_user, get_user_by_id, delete_user):
 
     test_object_users = UsersMethods(response_object)
     test_object_users.user_validation(user_data)
-
-    #чистим за собой тестовые данные
-    delete_user(user_id)
 
 @pytest.mark.users
 def test_025_get_created_user_by_incorrect_id(get_user_by_id):
@@ -299,7 +283,7 @@ def test_025_get_created_user_by_incorrect_id(get_user_by_id):
     test_object_users.validate_response_message_about_error_404(user_id)
 
 @pytest.mark.users
-def test_026_update_user(create_user, update_user, delete_user):
+def test_026_update_user(create_and_delete_user, update_user):
     """
     Внести изменения в данные существующего пользователя
 
@@ -312,7 +296,7 @@ def test_026_update_user(create_user, update_user, delete_user):
         Новая запись JSON ответа соответствует тому, что мы отправляли при редактировании пользователя
     """
     #Регистриуем тестового пользователя, т.к. пока некого запрашивать по user_id
-    response_object_create_user = create_user(user_data)
+    response_object_create_user = create_and_delete_user(user_data)
     user_id = response_object_create_user.json().get("user_id")
 
     # Переходим к самому тесту
@@ -326,8 +310,6 @@ def test_026_update_user(create_user, update_user, delete_user):
     test_object_users = UsersMethods(response_object)
     test_object_users.user_validation(update_data)
 
-    # чистим за собой тестовые данные
-    delete_user(user_id)
 
 
 

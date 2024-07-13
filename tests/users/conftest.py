@@ -60,26 +60,41 @@ def update_user():
         return response_object
     return _wrapped
 
+@pytest.fixture
+def create_and_delete_user(create_user, delete_user):
+    user_id = None
+
+    def _create_user(user_data):
+        nonlocal user_id
+        response_object = create_user(user_data)
+        user_id = response_object.json().get("user_id")
+        return response_object
+
+    yield _create_user
+
+    # Часть удаления пользователя
+    delete_user(user_id)
 
 # @pytest.fixture
 # def create_and_delete_user():
 #     """
 #     Фикстура создает пользователя, передает данные в тест, и по завершении теста удаляет пользователя.
-#     Тут же проверка удаления пользователя
 #     """
-#     # first_name_value, last_name_value, company_id= "Вальдемар", "Евлампиевич", 3
+#     user_id = None
 #
-#     payload = json.dumps({"first_name": first_name_value, "last_name": last_name_value, "company_id": company_id})
-#     headers = {'Content-Type': 'application/json'}
-#     response_object = requests.post(baseUrl_users, headers=headers, data=payload)
+#     def _wrapped(user_data):
+#         nonlocal user_id
+#         payload = json.dumps(user_data)
+#         headers = {'Content-Type': 'application/json'}
+#         response_object = requests.post(baseUrl_users, headers=headers, data=payload)
 #
-#     user_id = response_object.json().get("user_id")
-#     # print(user_id)  # удобно в постмане проверить, удалился ли потом пользователя
+#         user_id = response_object.json().get("user_id")
 #
-#     yield response_object
+#         return response_object
+#     yield _wrapped
 #
 #     payload = {}
 #     headers = {}
-#     requests.delete(baseUrl_users + "/" + str(user_id), headers=headers, data=payload)
+#     requests.delete(baseUrl_users + f"/{user_id}", headers=headers, data=payload)
 
 
