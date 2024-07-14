@@ -343,7 +343,8 @@ def test_issues_get_created_user_by_id_032(create_and_delete_user):
         Response header "Connection": "keep-alive"
         Новая запись JSON ответа соответствует тому, что мы отправляли при регистрации + содержит Id созданного юзера.
 
-    Полученный результат: статус код 202 (запрос был принят на обработку, но она не завершена), и далее все не то.
+    Полученный результат: статус код 202 (запрос был принят на обработку, но она не завершена),
+        ключи first_name и last_name не соответствуют тому, что мы ожидали.
     """
     response_object_create_user = create_and_delete_user(user_data)
     user_id = response_object_create_user.json().get("user_id")
@@ -392,20 +393,3 @@ def test_test():
     черновик
     print(response_object.__getstate__())  # вообще все выгружается, что есть
     """
-    import re
-
-    company_id = "2"
-    response_object = requests.get("https://restapi.tech/api/issues/companies/" + company_id)
-
-    response_time = int(response_object.elapsed.seconds) + int(response_object.elapsed.microseconds) / 100
-    # print(response_object.elapsed.seconds, response_object.elapsed.microseconds, response_object.elapsed)
-    #
-    # print(response_object.elapsed.seconds)
-
-    print(500, 500 * 10**-6)
-    print(response_object.elapsed, response_object.elapsed.microseconds * 10**-3)
-    # print(response_object.elapsed.seconds, response_object.elapsed.microseconds * 10**-6)
-    # print(response_object.elapsed.seconds + response_object.elapsed.microseconds * 10 ** -6)
-
-
-        # print(response_object.json())
