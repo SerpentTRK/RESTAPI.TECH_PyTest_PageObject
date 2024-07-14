@@ -58,25 +58,6 @@ class GlobalMethods:
 
         check.greater(max_time_to_response_in_seconds, response_time, self)
 
-    def validate_error_message_with_status_code_422(self, query_parameter=None, value=None, msg=None):
-        """
-        Валидация сообщений об ошибках для разных query-параметров
-        """
-        for elem in self.response.json().get("detail"):
-            if msg:
-                check.equal(elem["msg"], msg,
-                    msg=f"Ошибка! Ожидаемый текст ошибки: '{msg}' не совпадает с полученным: '{elem['msg']}'")
-            if query_parameter == "status":
-                error_message = "Input should be 'ACTIVE', 'CLOSED' or 'BANKRUPT'"
-            if query_parameter in ["limit", "offset"]:
-                error_message = "Input should be a valid integer, unable to parse string as an integer"
-
-                check.equal(elem["msg"], error_message,
-                    msg=f"Ошибка! Ожидаемый текст ошибки: '{error_message}' не совпадает с полученным: '{elem['msg']}'")
-                check.equal(elem["input"], value,
-                    msg=f"Ошибка! Отправленное значение: {value} не совпадает с полученным: {elem['input']}")
-
-
 
 
     def __str__(self):

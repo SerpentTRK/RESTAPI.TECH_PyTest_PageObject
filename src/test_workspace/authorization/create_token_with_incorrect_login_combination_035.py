@@ -12,7 +12,7 @@ class CreateTokenWithIncorrectLoginCombination(GlobalMethods, AuthMethods):
         self.validate_response_header("Content-type", "application/json")
         self.validate_response_header("Connection", "keep-alive")
 
-        self.validate_response_message_about_error_422(login)
+        self.validate_error_message_with_status_code_422(login)
 
         # else:
         #     test_object.assert_response_header("content-type", "application/json"). \

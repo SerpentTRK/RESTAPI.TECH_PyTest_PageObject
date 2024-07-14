@@ -1,8 +1,9 @@
 from src.classes.global_methods import GlobalMethods
+from src.classes.users_methods import UsersMethods
 from src.pydantic_shemas.model_422 import Model422
 
 
-class CreateUserWithNullAndEmptyLastName(GlobalMethods):
+class CreateUserWithNullAndEmptyLastName(GlobalMethods, UsersMethods):
     def __init__(self, response):
         self.response = response
         super().__init__(response)

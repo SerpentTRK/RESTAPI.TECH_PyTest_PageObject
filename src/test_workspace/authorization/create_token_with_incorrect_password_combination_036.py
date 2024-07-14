@@ -23,11 +23,4 @@ class CreateTokenWithIncorrectPasswordCombination(GlobalMethods, AuthMethods):
             self.validate_response_header("Connection", "keep-alive")
             self.validate_time_from_request_to_response()
 
-            self.validate_response_message_about_error_422()
-
-        # else:
-        #     test_object.assert_response_header("content-type", "application/json"). \
-        #         assert_response_header("connection", "keep-alive"). \
-        #         assert_https_request("443")
-        #     test_object_auth.assert_response_message_about_error_403("Invalid password")
-        #     test_object.validate_time_from_request_to_response(timedelta(microseconds=1500000))
+            self.validate_error_message_with_status_code_422()

@@ -12,7 +12,7 @@ class AuthMethods:
         check.equal(len(token), token_len,
             msg=f"Ошибка! Ожидаема длинна токена: '{token_len}'. Полученная: '{len(token)}'")
 
-    def validate_response_message_about_error_422(self, login=None):
+    def validate_error_message_with_status_code_422(self, login=None):
         """
         Валидация сообщения об 422 ошибке.
         """
