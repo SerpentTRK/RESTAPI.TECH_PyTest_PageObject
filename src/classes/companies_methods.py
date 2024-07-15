@@ -15,8 +15,6 @@ class CompaniesMethods:
         data_object = self.response.json().get("data")
 
         for item in data_object:
-            # assert item["company_status"] == company_status, \
-            #     f"Ошибка! Ожидали 'company_status': {company_status}, а получили {item['company_status']}"
             check.equal(item["company_status"], company_status,
                         msg=f"Ошибка! Ожидали 'company_status': {company_status}, а получили {item['company_status']}")
 
@@ -27,8 +25,6 @@ class CompaniesMethods:
         data_object = self.response.json().get("data")
         count_company_id = sum(1 for item in data_object if 'company_id' in item)
 
-        # assert count_company_id == company_quantity, \
-        #     f"Ошибка! В JSON-DATA ожидали {company_quantity} компании, а фактическое значение = {count_company_id}"
         check.equal(count_company_id, company_limit,
                     msg=f"Ошибка! В JSON-DATA ожидали {company_limit} компании, "
                         f"а фактическое значение = {count_company_id}")
@@ -44,9 +40,6 @@ class CompaniesMethods:
         first_company_id = 1
 
         list_company_id_values = [value for item in data_object for key, value in item.items() if key == "company_id"]
-        # assert first_company_id + offset_value == list_company_id_values[0], \
-        #     f"Ошибка! offset: {offset_value}. Ожидаемое значение 'company_id': {first_company_id + offset_value}, " \
-        #     f"фактически значение 'company_id': {list_company_id_values[0]}"
         check.equal(first_company_id + offset_value, list_company_id_values[0],
                     msg=f"Ошибка! offset: {offset_value}. "
                         f"Ожидаемое значение 'company_id': {first_company_id + offset_value}, "
@@ -58,9 +51,7 @@ class CompaniesMethods:
         """
         company_id = company_id.replace("/", "")
         for key, value in self.response.json().get("detail").items():
-            # assert value == f"Company with requested id: {company_id} is absent", \
-            #     f"Ошибка! В запросе был company_id: '{company_id}', " \
-            #     f"а по факту получили {''.join(c for c in value if c.isdigit())}"
+
             check.equal(value, f"Company with requested id: {company_id} is absent",
                         msg=f"Ошибка! В запросе был company_id: '{company_id}', "
                             f"а по факту получили {''.join(c for c in value if c.isdigit())}")
@@ -69,8 +60,6 @@ class CompaniesMethods:
         """
         Сравниваем URI из запроса и ответа
         """
-        # assert self.response.url == request_uri, \
-        #     f"Ошибка! URI запроса: {request_uri} не совпадает с URI ответа: {self.response.url}"
         check.equal(self.response.url, request_uri,
                     msg=f"Ошибка! URI запроса: {request_uri} не совпадает с URI ответа: {self.response.url}")
 
@@ -82,9 +71,6 @@ class CompaniesMethods:
         data_object = self.response.json().get("description_lang")[0]
         first_language = [value for key, value in data_object.items() if key == "translation_lang"]
 
-        # assert "".join(first_language) == first_language_by_default, \
-        #     f"Ошибка! Первым языком в 'description_lang' должен стоять '{first_language_by_default}', " \
-        #     f"а мы получаем '{''.join(first_language)}'"
         check.equal("".join(first_language), first_language_by_default,
                     msg=f"Ошибка! Первым языком в 'description_lang' должен стоять '{first_language_by_default}', "
                         f"а мы получаем '{''.join(first_language)}'")
