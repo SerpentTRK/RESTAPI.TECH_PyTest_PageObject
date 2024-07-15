@@ -162,6 +162,8 @@ def test_get_data_about_user_without_token_040():
     api = GetDataAboutUserWithoutToken(response_object)
     api.run_tests()
 
+
+
 @pytest.mark.skip("Это черновик")
 def test_test():
     """
