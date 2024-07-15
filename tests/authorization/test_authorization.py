@@ -15,6 +15,7 @@ from src.test_workspace.authorization.get_data_about_user_by_incorrect_token_038
 from src.test_workspace.authorization.get_data_about_user_by_token_037 import GetDataAboutUserByToken
 from src.test_workspace.authorization.get_data_about_user_with_token_after_timeout_039 import \
     GetDataAboutUserWithTokenAfterTimeout
+from src.test_workspace.authorization.get_data_about_user_without_token_040 import GetDataAboutUserWithoutToken
 
 
 @pytest.mark.authorization
@@ -80,6 +81,7 @@ def test_create_token_with_incorrect_password_combination_036(login, password, t
     api = CreateTokenWithIncorrectPasswordCombination(response_object)
     api.run_tests(result_status_code)
 
+@pytest.mark.authorization
 def test_get_data_about_user_by_token_037(authorization):
     """
     Получить данные пользователя по токену.
@@ -99,21 +101,7 @@ def test_get_data_about_user_by_token_037(authorization):
     api = GetDataAboutUserByToken(response_object)
     api.run_tests()
 
-
-
-
-
-    # test_object = ResponseTest(authorization)
-    # test_object_auth = ResponseAuthTest(resp)
-    #
-    # test_object.assert_status_code(200). \
-    #     validate_schema(ModelAuth200). \
-    #     assert_response_header("content-type", "application/json"). \
-    #     assert_response_header("connection", "keep-alive"). \
-    #     assert_https_request("443")
-    # test_object_auth.assert_user_data("Test_login")
-    # test_object.validate_time_from_request_to_response(timedelta(microseconds=1500000))
-
+@pytest.mark.authorization
 def test_get_data_about_user_by_incorrect_token_038():
     """
     Авторизовать пользователя по не верному (поддельному) токену.
@@ -131,6 +119,7 @@ def test_get_data_about_user_by_incorrect_token_038():
     api = GetDataAboutUserByIncorrectToken(response_object)
     api.run_tests()
 
+@pytest.mark.authorization
 def test_get_data_about_user_with_token_after_timeout_039(create_token):
     """
     Авторизация по просроченному токену.
@@ -155,6 +144,23 @@ def test_get_data_about_user_with_token_after_timeout_039(create_token):
     api = GetDataAboutUserWithTokenAfterTimeout(response_object)
     api.run_tests()
 
+@pytest.mark.authorization
+def test_get_data_about_user_without_token_040():
+    """
+    Авторизовать пользователя без токена.
+
+    Проведение общих проверок для всех тестов:
+        Статус-код 403;
+        Валидация сообщения об ошибке;
+        Response header "Content-Type" - "application/json";
+        Response header "Connection" - "keep-alive";
+        Время ответа сервера - не превышает 500ms;
+    """
+    payload, headers = {}, {"x-token": ""}
+    response_object = requests.get(baseUrl_get_user_by_token, headers=headers, data=payload)
+
+    api = GetDataAboutUserWithoutToken(response_object)
+    api.run_tests()
 
 @pytest.mark.skip("Это черновик")
 def test_test():
