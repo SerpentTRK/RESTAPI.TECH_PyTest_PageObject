@@ -15,7 +15,7 @@ class CreateTokenWithIncorrectPasswordCombination(GlobalMethods, AuthMethods):
             self.validate_response_header("Connection", "keep-alive")
             self.validate_time_from_request_to_response()
 
-            self.validate_response_message_about_error_403()
+            self.validate_response_message_about_error_403(login_or_pass=True)
 
         if result_status_code == 422:
             self.validate_status_code(result_status_code)

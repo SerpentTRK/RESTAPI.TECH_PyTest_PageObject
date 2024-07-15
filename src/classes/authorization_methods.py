@@ -44,11 +44,17 @@ class AuthMethods:
             check.equal(received_error_message, expected_error_message,
                         msg=f"Ошибка! {expected_error_message} != {received_error_message}")
 
-    def validate_response_message_about_error_403(self):
+    def validate_response_message_about_error_403(self, login_or_pass=False, token=False, timeout=False):
         """
         Валидация сообщения об 403 ошибки.
         """
-        expected_error_message = "Invalid login or password"
+        if token:
+            expected_error_message = "Token is incorrect. Please login and try again"
+        if timeout:
+            expected_error_message = "Token is expired. Please login and try again"
+        if login_or_pass:
+            expected_error_message = "Invalid login or password"
+
         received_error_message = self.response.json().get("detail")["reason"]
 
         check.equal(expected_error_message, received_error_message, msg=f"Ошибка! Ожидаемое сообщение об ошибке: "
